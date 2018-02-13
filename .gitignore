@@ -38,3 +38,4 @@ wand_demo
 *.vo
 *.glob
 *.aux
+bib/*.pdf
