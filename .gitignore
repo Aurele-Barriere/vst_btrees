@@ -39,3 +39,4 @@ wand_demo
 *.glob
 *.aux
 bib/*.pdf
+full
