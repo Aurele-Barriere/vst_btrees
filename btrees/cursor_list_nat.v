@@ -53,7 +53,7 @@ Fixpoint node_length (n:node) : nat :=
   | cons _ n' => S (node_length n')
   end.
 
-Definition cursor: Type := list (node * nat). (* ancestors and index *)
+Definition cursor: Type := list nat. (* ancestors index *)
 
 Fixpoint nth_child (i:nat) (n:node) : option node :=
   match i with
@@ -87,50 +87,49 @@ Fixpoint nth_val (i:nat) (n:node) : option V :=
             end
   end.
 
-Fixpoint cursor_valid (c:cursor): Prop :=
+Fixpoint is_valid (c:cursor) (n:node):= (* cursor is reversed *)
   match c with
-  | [] => True
-  | (n,x)::c' => (le x (node_length n)) /\ cursor_valid c'
+  | [] => match n with
+          | nil => True
+          | _ => False
+          end
+  | i::c' => match c' with
+             | [] => match nth_val i n with
+                     | Some _ => True
+                     | None => False
+                     end
+             | _ => match nth_child i n with
+                    | Some n' => is_valid c' n'
+                    | None => False
+                    end
+             end
   end.
-(* maybe I should add a few things:
-- the very first node should be the total node
-- if we have n,4, the the next node is the fourth child of n
-- the head points to a value
- *)
 
 Definition empty_btree: node := nil.
 Definition empty_cursor: cursor := [].
+
+Inductive partial_cursor_valid : cursor -> node -> node -> Prop :=
+| pcv_emp: forall n, partial_cursor_valid [] n n
+| pcv_root: forall (i:nat) n n', le i (node_length n) ->
+                      nth_child i n = Some n' ->
+                      partial_cursor_valid [i] n' n
+| pcv_cons: forall i c curr curr' n, partial_cursor_valid c curr n ->
+                                     le i (node_length curr) -> 
+                                     nth_child i curr = Some curr' ->
+                                     partial_cursor_valid (i::c) curr' n.
+
+Inductive cursor_valid : cursor -> node -> Prop :=
+| valid_val: forall c curr n i v, partial_cursor_valid c curr n ->
+                                  nth_val i curr = Some v ->
+                                  cursor_valid c n.
                       
-Fixpoint get_value (c:cursor) : option V :=
-  match c with
-  | [] => None
-  | (n,x)::c' => nth_val x n
-  end.
+Inductive get_value : cursor -> node -> V -> Prop :=
+| get: forall c curr n i v, partial_cursor_valid c curr n ->
+                            nth_val i curr = Some v ->
+                            get_value c n v.
 
-(* Not guaranteed to terminate! *)
-(* Fixpoint move_to_first (c:cursor) (n:node): cursor := *)
-(*   match c with *)
-(*   | [] => match n with *)
-(*           | nil => [] *)
-(*           | cons e n' => move_to_first [(n,0%nat)] n *)
-(*           end *)
-(*   | (n',x)::c' => match nth_child x n' with *)
-(*                   | None => c   (* reached a value *) *)
-(*                   | Some n'' => move_to_first ((n'',0%nat)::c) n *)
-(*                   end *)
-(*   end. *)
 
-Definition move_to_first (c:cursor) (n:node): cursor := c. (* todo *)
 
-Fixpoint move_to_next_partial (c:cursor) : cursor :=
-  match c with
-  | [] => []
-  | (n,x)::c' => 
-    match (le x ((node_length n) -1)) with
-    | True => (n,S x)::c'
-    (* | False => move_to_next_partial c' *)
-    end
-  end.
 
 Fixpoint node_to_list (n:node) : list entry :=
   match n with
