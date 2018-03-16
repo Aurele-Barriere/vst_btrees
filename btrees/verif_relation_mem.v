@@ -55,36 +55,46 @@ Fixpoint node_length (n:node) : nat :=
 
 Definition cursor: Type := list (node * nat). (* ancestors and index *)
 
-Fixpoint nth_child (i:nat) (n:node) : option node :=
+Fixpoint nth_entry (i:nat) (n:node) : option entry :=
   match i with
   | O => match n with
          | nil => None
-         | cons e _ => match e with
-                       | ptr0 n' => Some n'
-                       | keyval _ _ => None
-                       | keychild _ n' => Some n'
-                       end
+         | cons e _ => Some e
          end
   | S i' => match n with
-            | nil => None
-            | cons _ n' => nth_child i' n'
+           | nil => None
+           | cons _ n' => nth_entry i' n'
             end
   end.
 
+Fixpoint nth_child (i:nat) (n:node) : option node :=
+  match nth_entry i n with
+  | None => None
+  | Some e => match e with
+              | ptr0 n' => Some n'
+              | keyval _ _ => None
+              | keychild _ n' => Some n'
+              end
+  end.
+
 Fixpoint nth_val (i:nat) (n:node) : option V :=
-  match i with
-  | O => match n with
-         | nil => None
-         | cons e _ => match e with
-                       | ptr0 _ => None
-                       | keyval _ v => Some v
-                       | keychild _ _ => None
-                       end
-         end
-  | S i' => match n with
-            | nil => None
-            | cons _ n' => nth_val i' n'
-            end
+  match nth_entry i n with
+  | None => None
+  | Some e => match e with
+              | ptr0 _ => None
+              | keyval _ v => Some v
+              | keychild _ _ => None
+              end
+  end.
+
+Fixpoint nth_key (i:nat) (n:node) : option key :=
+  match nth_entry i n with
+  | None => None
+  | Some e => match e with
+              | ptr0 _ => None
+              | keychild k _ => Some k
+              | keyval k _ => Some k
+              end
   end.
 
 Fixpoint cursor_valid (c:cursor): Prop :=
@@ -107,30 +117,53 @@ Fixpoint get_value (c:cursor) : option V :=
   | (n,x)::c' => nth_val x n
   end.
 
-(* Not guaranteed to terminate! *)
-(* Fixpoint move_to_first (c:cursor) (n:node): cursor := *)
-(*   match c with *)
-(*   | [] => match n with *)
-(*           | nil => [] *)
-(*           | cons e n' => move_to_first [(n,0%nat)] n *)
-(*           end *)
-(*   | (n',x)::c' => match nth_child x n' with *)
-(*                   | None => c   (* reached a value *) *)
-(*                   | Some n'' => move_to_first ((n'',0%nat)::c) n *)
-(*                   end *)
-(*   end. *)
-
-Definition move_to_first (c:cursor) (n:node): cursor := c. (* todo *)
+Fixpoint move_to_first (c:cursor) (curr:node): cursor :=
+  match curr with
+  | nil => c
+  | cons e n' => match e with
+                 | ptr0 n => move_to_first ((curr,0%nat)::c) n
+                 | keychild _ _ => c           (* should not happen *)
+                 | keyval k v => ((curr,0%nat)::c)
+                 end
+  end.
 
 Fixpoint move_to_next_partial (c:cursor) : cursor :=
   match c with
   | [] => []
   | (n,x)::c' => 
-    match (le x ((node_length n) -1)) with
-    | True => (n,S x)::c'
-    (* | False => move_to_next_partial c' *)
+    match (x <=? ((node_length n) -1))%nat with
+    | true => (n,S x)::c'
+    | false => move_to_next_partial c'
     end
   end.
+
+Definition move_to_next (c:cursor): cursor :=
+  match (move_to_next_partial c) with
+  | [] => c                    (* C program returns false here *)
+  | (n,x)::c' => match nth_child x n with
+                 | Some n' => move_to_first c n'
+                 | None => c
+                 end
+  end.
+
+Definition get_key (c:cursor): option key :=
+  match c with
+  | [] => None
+  | (n,x)::c' => nth_key x n
+  end.
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 Fixpoint node_to_list (n:node) : list entry :=
   match n with
