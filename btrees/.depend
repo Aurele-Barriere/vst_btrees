@@ -1,6 +1,0 @@
-btrees.vo btrees.glob btrees.v.beautified: btrees.v
-btrees.vio: btrees.v
-btreesfun.vo btreesfun.glob btreesfun.v.beautified: btreesfun.v
-btreesfun.vio: btreesfun.v
-verif_btrees.vo verif_btrees.glob verif_btrees.v.beautified: verif_btrees.v btrees.vo btreesfun.vo
-verif_btrees.vio: verif_btrees.v btrees.vio btreesfun.vio

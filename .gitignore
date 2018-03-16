@@ -40,3 +40,6 @@ wand_demo
 *.aux
 bib/*.pdf
 full
+btrees/.depend
+btrees/.loadpath
+myprogs
