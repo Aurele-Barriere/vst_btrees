@@ -11,10 +11,13 @@ Require Import VST.msl.iter_sepcon.
 Require Import VST.floyd.reassoc_seq.
 Require Import VST.floyd.field_at_wand.
 
-Definition key := Z.            (* unsigned long in C *)
+(**
+    BTREES FORMAL MODEL
+**)
 
 Section BTrees.
-Variable V : Type.
+Definition key := Z.            (* unsigned long in C *)
+Definition V:Type := Z.         (* I need some type for value_rep *)
 Variable b : nat.
 
 Inductive entry: Type :=
@@ -103,10 +106,16 @@ Fixpoint cursor_valid (c:cursor): Prop :=
   | (n,x)::c' => (le x (node_length n)) /\ cursor_valid c'
   end.
 (* maybe I should add a few things:
-- the very first node should be the total node
-- if we have n,4, the the next node is the fourth child of n
+- the very first (deepest in the list) node should be the "total" node
+- if we have (n,4) in the cursor, the next node is the fourth child of n
 - the head points to a value
  *)
+
+Fixpoint cursor_valid_bool (c:cursor): bool :=
+  match c with
+  | [] => true
+  | (n,x)::c' => (x <=? (node_length n))%nat && cursor_valid_bool c'
+  end.
 
 Definition empty_btree: node := nil.
 Definition empty_cursor: cursor := [].
@@ -152,18 +161,24 @@ Definition get_key (c:cursor): option key :=
   | (n,x)::c' => nth_key x n
   end.
 
+Fixpoint numKeys (n:node) : nat :=
+  match n with
+  | nil => 0%nat
+  | cons e n => numKeys n + match e with
+                            | ptr0 _ => 0%nat
+                            | keychild _ _ => 1%nat
+                            | keyval _ _ => 1%nat
+                            end
+  end.
 
-
-
-
-
-
-
-
-
-
-
-
+Definition isLeaf (n:node) : bool :=
+  match n with
+  | nil => true                 (* can we have nil intern nodes? or do they have pr0 at least? *)
+  | cons e n => match e with
+                | keyval _ _ => true
+                | _ => false
+                end
+  end.
 
 Fixpoint node_to_list (n:node) : list entry :=
   match n with
@@ -186,24 +201,99 @@ Definition node_to_ptr0 (n:node) : option node :=
     end
   end.
 
-Definition btnode_rep (n:node) (p:val) : mpred :=
-  EX nvl: list entry, EX ptr0: option node, EX pptr0: val,
-     !!(nvl = node_to_list n) && !!(ptr0 = node_to_ptr0 n) &&
-     (* if ptr0 = Some, then btnode_rep ptr0 pptr0 *)
-     malloc_token Tsh (Tstruct _BtNode noattr) p
-     (* * field_at Tsh (Tstruct _BtNode noattr) [StructField _isLeaf] (if ptr0=None then false else true) p * *)
-     (* field_at Tsh (Tstruct _BtNode noattr) [StructField _numKeys] (Zlength nvl) p * *)
-     (* field_at Tsh (Tstruct _BtNode noattr) [StructField _ptr0] (ptr0) p * (* should be a val *) *)
-     (* field_at Tsh (Tstruct _BtNode noattr) [StructField _entries] (nvl) p (* this isn't right *) *).
+Fixpoint findChildIndex (n:node) (k:key): nat :=
+  match n with
+  | nil => 0%nat
+  | cons e n' => match e with
+                 | ptr0 _ => findChildIndex n' k
+                 | keychild k' c => match (k <=? k')%Z with
+                                    | true => 0%nat
+                                    | false => S (findChildIndex n' k)
+                                    end
+                 | keyval  k' v => match (k <=? k')%Z with
+                                    | true => 0%nat
+                                    | false => S (findChildIndex n' k)
+                                   end
+                 end
+  end.
 
-Definition value_rep (v:V) (p:val):mpred := emp. (* todo *)
+Fixpoint getRootNode (c:cursor) : node :=
+  match c with
+  | [(n,x)] => n
+  | (n,x)::c' => getRootNode c'
+  | [] => nil
+  end.
 
-Definition key_rep (k:key) (p:val):mpred := emp. (* todo *)
+Definition getCurrNode (c:cursor) : node :=
+  match c with
+  | (n,x)::c' => n              (* Or n(x) ? *)
+  | [] => nil
+  end.
 
-Definition entry_rep (e:entry) (p:val) : mpred :=
+Definition getEntryIndex (c:cursor) : nat :=
+  match c with
+  | (n,x)::c' => x
+  | [] => 0%nat
+  end.
+
+(**
+    REPRESENTATIONS IN SEPARATION LOGIC
+**)
+
+Definition value_rep (v:V) (p:val):= (* this should change if we change the type of Values *)
+  data_at Tsh tint (Vint (Int.repr v)) p.
+
+Fixpoint entry_rep (e:entry) (p:val): mpred := (* only for keychild and keyval *)
   match e with
   | ptr0 _ => emp
-  | keyval k v => value_rep v p * key_rep k p
-  | keychild k c => key_rep k p * btnode_rep c p
-  end.
-                    (* not p but the corresponding field *)
+  | keyval k v =>
+    field_at Tsh (Tstruct _Entry noattr) (DOT _key) (Vint(Int.repr k)) p *
+    EX p':val, (* field_at Tsh (Tstruct _Entry noattr) (DOT _ptr) p' p * *)
+               value_rep v p'
+  | keychild k c =>
+    field_at Tsh (Tstruct _Entry noattr) (DOT _key) (Vint(Int.repr k)) p *
+    EX p':val, (* field_at Tsh (Tstruct _Entry noattr) (DOT _ptr) p' p * *)
+          btnode_rep c p'
+  end
+with btnode_rep (n:node) (p:val):mpred :=
+       field_at Tsh (Tstruct _BtNode noattr) (DOT _numKeys) (Vint(Int.repr (Z.of_nat(numKeys n)))) p *
+       field_at Tsh (Tstruct _BtNode noattr) (DOT _isLeaf) (Val.of_bool (isLeaf n)) p *
+       EX p':val,
+       field_at Tsh (Tstruct _BtNode noattr) (DOT _ptr0) p' p *
+       match n with
+       | cons e n' => match e with
+                      | ptr0 n'' => btnode_rep n'' p'
+                      | _ => !!(p'=nullval)
+                      end
+       | nil => !!(p'=nullval)
+       end (* this could be replaced by node_to_ptr0 but then we can't find the decreasing argument *) *
+       (* something with node_to_list and entry_rep *) emp.
+
+Definition cursor_rep (c:cursor) (p:val):mpred :=
+  EX prel:val, EX pcurr:val,
+  field_at Tsh (Tstruct _Cursor noattr) (DOT _relation) prel p *
+  btnode_rep (getRootNode c) prel *
+  field_at Tsh (Tstruct _Cursor noattr) (DOT _currNode) pcurr p *
+  btnode_rep (getCurrNode c) pcurr * (* this is redundant with the previous btnode_rep ? *)
+  field_at Tsh (Tstruct _Cursor noattr) (DOT _entryIndex) (Vint(Int.repr(Z.of_nat(getEntryIndex c)))) p *
+  field_at Tsh (Tstruct _Cursor noattr) (DOT _isValid) (Val.of_bool (cursor_valid_bool c)) p *
+  field_at Tsh (Tstruct _Cursor noattr) (DOT _level) (Vint(Int.repr(Zlength c))) p *
+  (* something for nextAncestorPointerIdx *)
+  (* something for ancestrors *) emp.
+
+(**
+    FUNCTION SPECIFICATIONS
+ **)
+
+
+(** 
+    GPROG
+ **)
+
+
+
+(**
+    FUNCTION BODIES PROOFS
+ **)
+
+
