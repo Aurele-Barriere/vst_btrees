@@ -19,6 +19,7 @@ Section BTrees.
 Definition key := Z.            (* unsigned long in C *)
 Definition V:Type := Z.         (* I need some type for value_rep *)
 Variable b : nat.
+Variable X:Type.                (* val or unit *)
 
 Inductive entry: Type :=
      | ptr0: node -> entry
@@ -26,8 +27,11 @@ Inductive entry: Type :=
      | keychild: key -> node -> entry
 with node: Type :=
      | nil: node
-     | cons: entry -> node -> node.
+     | cons: entry -> X -> node -> node.
 (* every list of keychilds begins with a ptr0 *)
+
+Definition cursor: Type := list (node * nat). (* ancestors and index *)
+Definition relation: Type := node * nat.      (* root and numRecords *)
 
 Fixpoint max_nat (m : nat) (n : nat) : nat :=
   match m with
@@ -41,7 +45,7 @@ Fixpoint max_nat (m : nat) (n : nat) : nat :=
 Fixpoint node_depth (n:node) : nat :=
   match n with
   | nil => O
-  | cons e n' => max_nat (entry_depth e) (node_depth n')
+  | cons e _ n' => max_nat (entry_depth e) (node_depth n')
   end
 with entry_depth (e:entry) : nat :=
   match e with
@@ -53,20 +57,18 @@ with entry_depth (e:entry) : nat :=
 Fixpoint node_length (n:node) : nat :=
   match n with
   | nil => O
-  | cons _ n' => S (node_length n')
+  | cons _ _ n' => S (node_length n')
   end.
-
-Definition cursor: Type := list (node * nat). (* ancestors and index *)
 
 Fixpoint nth_entry (i:nat) (n:node) : option entry :=
   match i with
   | O => match n with
          | nil => None
-         | cons e _ => Some e
+         | cons e _ _ => Some e
          end
   | S i' => match n with
            | nil => None
-           | cons _ n' => nth_entry i' n'
+           | cons _ _ n' => nth_entry i' n'
             end
   end.
 
@@ -129,11 +131,11 @@ Fixpoint get_value (c:cursor) : option V :=
 Fixpoint move_to_first (c:cursor) (curr:node): cursor :=
   match curr with
   | nil => c
-  | cons e n' => match e with
-                 | ptr0 n => move_to_first ((curr,0%nat)::c) n
-                 | keychild _ _ => c           (* should not happen *)
-                 | keyval k v => ((curr,0%nat)::c)
-                 end
+  | cons e _ n' => match e with
+                   | ptr0 n => move_to_first ((curr,0%nat)::c) n
+                   | keychild _ _ => c           (* should not happen *)
+                   | keyval k v => ((curr,0%nat)::c)
+                   end
   end.
 
 Fixpoint move_to_next_partial (c:cursor) : cursor :=
@@ -164,26 +166,36 @@ Definition get_key (c:cursor): option key :=
 Fixpoint numKeys (n:node) : nat :=
   match n with
   | nil => 0%nat
-  | cons e n => numKeys n + match e with
-                            | ptr0 _ => 0%nat
-                            | keychild _ _ => 1%nat
-                            | keyval _ _ => 1%nat
-                            end
+  | cons e _ n => numKeys n + match e with
+                              | ptr0 _ => 0%nat
+                              | keychild _ _ => 1%nat
+                              | keyval _ _ => 1%nat
+                              end
+  end.
+
+Fixpoint numRecords (n:node) : nat :=
+  match n with
+  | nil => 0%nat
+  | cons e _ n => numRecords n + match e with
+                                 | ptr0 n' => numRecords n'
+                                 | keychild _ n' => numRecords n'
+                                 | keyval _ _ => 1%nat
+                                 end
   end.
 
 Definition isLeaf (n:node) : bool :=
   match n with
   | nil => true                 (* can we have nil intern nodes? or do they have pr0 at least? *)
-  | cons e n => match e with
-                | keyval _ _ => true
-                | _ => false
-                end
+  | cons e _ n => match e with
+                  | keyval _ _ => true
+                  | _ => false
+                  end
   end.
 
 Fixpoint node_to_list (n:node) : list entry :=
   match n with
   | nil => []
-  | cons e n' =>
+  | cons e _ n' =>
     match e with
     | ptr0 n'' => node_to_list n'
     | keyval k v => (keyval k v)::node_to_list n'
@@ -194,7 +206,7 @@ Fixpoint node_to_list (n:node) : list entry :=
 Definition node_to_ptr0 (n:node) : option node :=
   match n with
   | nil => None
-  | cons e n' =>
+  | cons e _ n' =>
     match e with
     | ptr0 n'' => Some n''
     | _ => None
@@ -204,17 +216,17 @@ Definition node_to_ptr0 (n:node) : option node :=
 Fixpoint findChildIndex (n:node) (k:key): nat :=
   match n with
   | nil => 0%nat
-  | cons e n' => match e with
-                 | ptr0 _ => findChildIndex n' k
-                 | keychild k' c => match (k <=? k')%Z with
-                                    | true => 0%nat
-                                    | false => S (findChildIndex n' k)
-                                    end
-                 | keyval  k' v => match (k <=? k')%Z with
-                                    | true => 0%nat
-                                    | false => S (findChildIndex n' k)
-                                   end
-                 end
+  | cons e _ n' => match e with
+                   | ptr0 _ => findChildIndex n' k
+                   | keychild k' c => match (k <=? k')%Z with
+                                      | true => 0%nat
+                                      | false => S (findChildIndex n' k)
+                                      end
+                   | keyval  k' v => match (k <=? k')%Z with
+                                     | true => 0%nat
+                                     | false => S (findChildIndex n' k)
+                                     end
+                   end
   end.
 
 Fixpoint getRootNode (c:cursor) : node :=
@@ -243,13 +255,18 @@ Definition getEntryIndex (c:cursor) : nat :=
 Definition value_rep (v:V) (p:val):= (* this should change if we change the type of Values *)
   data_at Tsh tint (Vint (Int.repr v)) p.
 
+Compute (reptype (Tunion _Child_or_Record noattr)). (* to represent the entry list *)
+
 Fixpoint entry_rep (e:entry) (p:val): mpred := (* only for keychild and keyval *)
   match e with
   | ptr0 _ => emp
   | keyval k v =>
     field_at Tsh (Tstruct _Entry noattr) (DOT _key) (Vint(Int.repr k)) p *
-    EX p':val, (* field_at Tsh (Tstruct _Entry noattr) (DOT _ptr) p' p * *)
-               value_rep v p'
+    EX q1:reptype (nested_field_type (Tstruct _Entry noattr) [StructField _ptr]),
+          EX q2:val,
+                !!(JMeq q1 q2) &&
+          field_at Tsh (Tstruct _Entry noattr) (DOT _ptr) q1 p * 
+           value_rep v (field_address (Tunion _Child_or_Record noattr) [UnionField _record] q2)
   | keychild k c =>
     field_at Tsh (Tstruct _Entry noattr) (DOT _key) (Vint(Int.repr k)) p *
     EX p':val, (* field_at Tsh (Tstruct _Entry noattr) (DOT _ptr) p' p * *)
@@ -261,39 +278,123 @@ with btnode_rep (n:node) (p:val):mpred :=
        EX p':val,
        field_at Tsh (Tstruct _BtNode noattr) (DOT _ptr0) p' p *
        match n with
-       | cons e n' => match e with
+       | cons e _ n' => match e with
                       | ptr0 n'' => btnode_rep n'' p'
                       | _ => !!(p'=nullval)
                       end
        | nil => !!(p'=nullval)
-       end (* this could be replaced by node_to_ptr0 but then we can't find the decreasing argument *) *
+       end (* this could be replaced by matching node_to_ptr0 but then we can't find the decreasing argument *) *
        (* something with node_to_list and entry_rep *) emp.
 
+Definition relation_rep (r:relation) (p:val):mpred :=
+  match r with
+  | (n,r) => EX p':val,
+                   field_at Tsh (Tstruct _Relation noattr) (DOT _root) p' p *
+                   btnode_rep n p' *
+                   field_at Tsh (Tstruct _Relation noattr) (DOT _numRecords) (Vint(Int.repr(Z.of_nat r))) p
+  end.
+
+Definition uncurry {A B C} (f: A -> B -> C) (xy: A*B) : C :=
+  f (fst xy) (snd xy).
+
 Definition cursor_rep (c:cursor) (p:val):mpred :=
-  EX prel:val, EX pcurr:val,
-  field_at Tsh (Tstruct _Cursor noattr) (DOT _relation) prel p *
+  EX prel:val, EX pcurr:val, EX ancestors:list(node * val),
+  !!(map fst ancestors = map fst c) && (* or its reverse? *)
+  field_at Tsh (Tstruct _Cursor noattr) (DOT _relation) prel p * (* relation rep? *)
   btnode_rep (getRootNode c) prel *
   field_at Tsh (Tstruct _Cursor noattr) (DOT _currNode) pcurr p *
   btnode_rep (getCurrNode c) pcurr * (* this is redundant with the previous btnode_rep ? *)
   field_at Tsh (Tstruct _Cursor noattr) (DOT _entryIndex) (Vint(Int.repr(Z.of_nat(getEntryIndex c)))) p *
   field_at Tsh (Tstruct _Cursor noattr) (DOT _isValid) (Val.of_bool (cursor_valid_bool c)) p *
   field_at Tsh (Tstruct _Cursor noattr) (DOT _level) (Vint(Int.repr(Zlength c))) p *
-  (* something for nextAncestorPointerIdx *)
-  (* something for ancestrors *) emp.
+  field_at Tsh (Tstruct _Cursor noattr) (DOT _nextAncestorPointerIdx) (map (fun x => Vint(Int.repr(Z.of_nat(snd x)))) c) p * (* or its reverse? *)
+  field_at Tsh (Tstruct _Cursor noattr) (DOT _ancestors) (map snd ancestors) p *
+  iter_sepcon ancestors (uncurry btnode_rep).
 
 (**
     FUNCTION SPECIFICATIONS
  **)
 
+Definition createNewNode_spec : ident * funspec :=
+  DECLARE _createNewNode
+  WITH isLeaf:bool
+  PRE [ _isLeaf OF tint ]       (* why tint and not tbool? *)
+  PROP ()
+  LOCAL (temp _isLeaf (Val.of_bool isLeaf))
+  SEP ()
+  POST [ tptr (Tstruct _BtNode noattr) ]
+  EX p:val, PROP ()
+  LOCAL (temp ret_temp p)
+  SEP (btnode_rep nil p).
+
+Definition RL_NewRelation_spec : ident * funspec :=
+  DECLARE _RL_NewRelation
+  WITH u:unit
+  PRE [ ]
+  PROP ()
+  LOCAL ()
+  SEP ()
+  POST [ tptr (Tstruct _Relation noattr) ]
+  EX p:val, PROP ()
+  LOCAL(temp ret_temp p)
+  SEP (relation_rep (empty_btree,0%nat) p).
+
+Definition RL_NewCursor_spec : ident * funspec :=
+  DECLARE _RL_NewCursor
+  WITH r:relation, p:val
+  PRE [ _relation OF tptr (Tstruct _Relation noattr) ]
+  PROP ()
+  LOCAL (temp _relation p)
+  SEP (relation_rep r p)
+  POST [ tptr (Tstruct _Cursor noattr) ]
+  EX p':val, PROP ()
+  LOCAL(temp ret_temp p')
+  SEP (relation_rep r p * cursor_rep empty_cursor p').
 
 (** 
     GPROG
  **)
 
+Definition Gprog : funspecs :=
+        ltac:(with_library prog [
+                             createNewNode_spec; RL_NewRelation_spec; RL_NewCursor_spec
+ ]).
 
 
 (**
     FUNCTION BODIES PROOFS
  **)
 
+Lemma body_createNewNode: semax_body Vprog Gprog f_createNewNode createNewNode_spec.
+Proof.
+start_function.
+(* forward_call (Tstruct _BtNode noattr). *)
+Admitted.
 
+Lemma body_NewRelation: semax_body Vprog Gprog f_RL_NewRelation RL_NewRelation_spec.
+Proof.
+start_function.
+forward_call(true).
+Intros vret.
+forward_if (PROP () LOCAL (temp _pRootNode vret) SEP (btnode_rep nil vret; emp)).
+- rewrite prop_sepcon2. entailer!. admit.
+- forward.
+  entailer!. Exists (Vint(Int.repr 0)). entailer!.
+  Exists nullval. Exists nullval. entailer!.
+  rewrite prop_sepcon2. entailer!. admit.
+-forward. entailer!.
+- (* forward_call (Tstruct _Relation noattr). *) admit.
+Admitted.
+(* Some confusion between tuint and tulong *)
+
+
+Lemma body_NewCursor: semax_body Vprog Gprog f_RL_NewCursor RL_NewCursor_spec.
+Proof.
+start_function.
+forward_if (PROP() LOCAL(temp _relation p) SEP(relation_rep r p)).
+- admit.
+- forward. auto.
+- subst p. admit.               (* how to use forward_call here? *)
+- (* forward_call (Tstruct _Cursor noattr). *) (*tuint and tulong*)
+  admit.
+Admitted.
