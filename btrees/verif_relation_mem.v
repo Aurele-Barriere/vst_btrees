@@ -22,7 +22,7 @@ Variable b : nat.
 Variable X:Type.                (* val or unit *)
 
 Inductive entry (X:Type): Type :=
-     | keyval: key -> V -> entry X
+     | keyval: key -> V -> X -> entry X
      | keychild: key -> node X -> entry X
 with node (X:Type): Type :=
      | btnode: option (node X) -> listentry X -> X -> node X
@@ -56,7 +56,7 @@ with listentry_depth {X:Type} (le:listentry X) : nat :=
        end
 with entry_depth {X:Type} (e:entry X) : nat :=
        match e with
-       | keyval _ _ => S O
+       | keyval _ _ _ => S O
        | keychild _ n => S (node_depth n)
        end.                                                 
 
@@ -79,7 +79,7 @@ Fixpoint move_to_first {X:Type} (c:cursor X) (curr:node X): cursor X:=
                   | None => match le with
                             | nil => c (* possible? *)
                             | cons e le' => match e with
-                                            | keyval _ _ => ((curr,0%nat)::c)
+                                            | keyval _ _ _ => ((curr,0%nat)::c)
                                             | keychild _ _ => c (* not possible, we would have a ptr0 otherwise *)
                                             end
                             end
@@ -116,7 +116,7 @@ Fixpoint nth_node_le {X:Type} (i:nat) (le:listentry X): option (node X) :=
          | nil => None
          | cons e _ => match e with
                        | keychild _ n => Some n
-                       | keyval _ _ => None
+                       | keyval _ _ _ => None
                        end
          end
   | S i' => match le with
@@ -158,9 +158,6 @@ Definition tcursor:=      Tstruct _Cursor noattr.
 Definition value_rep (v:V) (p:val):= (* this should change if we change the type of Values? *)
   data_at Tsh tint (Vint (Int.repr v)) p.
 
-Compute (reptype tchildrecord). (* to represent the entry list in btnode_rep *)
-Compute (reptype (nested_field_type tentry [StructField _ptr])).
-
 Fixpoint numKeys_le {X:Type} (le:listentry X) : nat :=
   match le with
   | nil => 0%nat
@@ -176,27 +173,28 @@ Definition isLeaf {X:Type} (n:node X) : bool :=
                                    | Some _ => false end
   end.
 
+Definition getval (n:node val): val :=
+  match n with btnode _ _ x => x end.
 
-Fixpoint entry_rep (e:entry val) (p:val): mpred := (* only for keychild and keyval *)
+Fixpoint le_to_list (le:listentry val) : list (val * (val + val)) :=
+  match le with
+  | nil => []
+  | cons e le' =>
+    (match e with
+     | keychild k c => ((Vlong(Int64.repr k)),  inl (getval c))
+     | keyval k v x => ((Vlong(Int64.repr k)),  inr x) (* ptr to the record?? *)
+     end) :: le_to_list le'
+  end.
+
+Fixpoint entry_rep (e:entry val):=
   match e with
-  | keyval k v =>
-    field_at Tsh tentry (DOT _key) (Vlong(Int64.repr k)) p * (* Vlong?? *)
-    EX q1:reptype (nested_field_type tentry [StructField _ptr]),
-    EX q2:val,
-          !!(JMeq q1 q2) &&
-          field_at Tsh tentry (DOT _ptr) q1 p *
-          value_rep v (field_address tchildrecord [UnionField _record] q2)
-  | keychild k c =>
-    field_at Tsh tentry (DOT _key) (Vlong(Int64.repr k)) p *
-    EX q1: reptype (nested_field_type tentry [StructField _ptr]),
-    EX q2:val,
-          !!(JMeq q1 q2) &&
-          field_at Tsh tentry (DOT _ptr) q1 p *
-          btnode_rep c (field_address tchildrecord [UnionField _child] q2)
+  | keychild _ n => match n with btnode _ _ x => btnode_rep n x end
+  | keyval _ v x => value_rep v x
   end
 with btnode_rep (n:node val) (p:val):mpred :=
   match n with btnode ptr0 le x =>
   !!(x=p) &&
+  malloc_token Tsh tbtnode p *
   field_at Tsh tbtnode (DOT _numKeys) (Vint(Int.repr (Z.of_nat (numKeys n)))) p *
   match ptr0 with
   | None => field_at Tsh tbtnode (DOT _isLeaf) (Val.of_bool true) p *
@@ -204,8 +202,14 @@ with btnode_rep (n:node val) (p:val):mpred :=
   | Some n' => field_at Tsh tbtnode (DOT _isLeaf) (Val.of_bool false) p *
                match n' with btnode _ _ p' => field_at Tsh tbtnode (DOT _ptr0) p' p * btnode_rep n' p' end
   end *
-  (* list of entries *) emp
-end.
+  field_at Tsh tbtnode (DOT _entries) (le_to_list le) p *
+  le_iter_sepcon le
+  end
+with le_iter_sepcon (le:listentry val):mpred :=
+  match le with
+  | nil => emp
+  | cons e le' => entry_rep e * le_iter_sepcon le'
+  end.
 
 Definition relation_rep (r:relation val) (p:val):mpred :=
   match r with
@@ -213,7 +217,8 @@ Definition relation_rep (r:relation val) (p:val):mpred :=
     EX p':val,
           field_at Tsh trelation (DOT _root) p' p *
           btnode_rep n p' *
-          field_at Tsh trelation (DOT _numRecords) (Vint(Int.repr(Z.of_nat c))) p
+          field_at Tsh trelation (DOT _numRecords) (Vint(Int.repr(Z.of_nat c))) p *
+          malloc_token Tsh trelation p
   end.
 
 Definition getCurrVal (c:cursor val): val :=
@@ -234,10 +239,9 @@ Fixpoint cursor_valid_bool {X:Type} (c:cursor X): bool :=
   | (b,i)::c' => match b with btnode ptr0 le x => (i <=? (numKeys_le le))%nat && cursor_valid_bool c' end
   end.                          (* might be incomplete *)
 
-Definition getval (n:node val): val :=
-  match n with btnode _ _ x => x end.
 
 Definition cursor_rep (c:cursor val) (r:relation val) (p:val):mpred :=
+  malloc_token Tsh tcursor p *
   field_at Tsh tcursor (DOT _currNode) (getCurrVal c) p *
   match r with (n,c,x) => field_at Tsh tcursor (DOT _relation) x p end *
   field_at Tsh tcursor (DOT _entryIndex) (Vint(Int.repr(Z.of_nat(getEntryIndex c)))) p *
@@ -245,7 +249,8 @@ Definition cursor_rep (c:cursor val) (r:relation val) (p:val):mpred :=
   field_at Tsh tcursor (DOT _level) (Vint(Int.repr(Zlength c))) p *
   field_at Tsh tcursor (DOT _nextAncestorPointerIdx) (map (fun x => Vint(Int.repr(Z.of_nat(snd x)))) c) p * (* or its reverse? *)
   field_at Tsh tcursor (DOT _ancestors) (map getval (map fst c)) p.
-(* what about the list length that can be shorter than thee array? *)
+(* what about the list length that can be shorter than the array? *)
+(* also the index might be not exactly the same for intern nodes (no -1) *)
 
 (* (** *)
 (*     FUNCTION SPECIFICATIONS *)
