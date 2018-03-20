@@ -255,87 +255,90 @@ Definition cursor_rep (c:cursor val) (r:relation val) (p:val):mpred :=
 (* (** *)
 (*     FUNCTION SPECIFICATIONS *)
 (*  **) *)
+Definition empty_node (p:val):node val := (btnode val) None (nil val) p.
+Definition empty_relation (pr:val) (pn:val): relation val := ((empty_node pn),0%nat,pr).
+Definition empty_cursor := []:cursor val.
 
-(* Definition createNewNode_spec : ident * funspec := *)
-(*   DECLARE _createNewNode *)
-(*   WITH isLeaf:bool *)
-(*   PRE [ _isLeaf OF tint ]       (* why tint and not tbool? *) *)
-(*   PROP () *)
-(*   LOCAL (temp _isLeaf (Val.of_bool isLeaf)) *)
-(*   SEP () *)
-(*   POST [ tptr tbtnode ] *)
-(*   EX p:val, PROP () *)
-(*   LOCAL (temp ret_temp p) *)
-(*   SEP (btnode_rep nil p). *)
+Definition createNewNode_spec : ident * funspec :=
+  DECLARE _createNewNode
+  WITH isLeaf:bool
+  PRE [ _isLeaf OF tint ]       (* why tint and not tbool? *)
+  PROP ()
+  LOCAL (temp _isLeaf (Val.of_bool isLeaf))
+  SEP ()
+  POST [ tptr tbtnode ]
+  EX p:val, PROP ()
+  LOCAL (temp ret_temp p)
+  SEP (btnode_rep (empty_node p) p).
 
-(* Definition RL_NewRelation_spec : ident * funspec := *)
-(*   DECLARE _RL_NewRelation *)
-(*   WITH u:unit *)
-(*   PRE [ ] *)
-(*   PROP () *)
-(*   LOCAL () *)
-(*   SEP () *)
-(*   POST [ tptr trelation ] *)
-(*   EX p:val, PROP () *)
-(*   LOCAL(temp ret_temp p) *)
-(*   SEP (relation_rep (empty_btree,0%nat) p). *)
+Definition RL_NewRelation_spec : ident * funspec :=
+  DECLARE _RL_NewRelation
+  WITH u:unit
+  PRE [ ]
+  PROP ()
+  LOCAL ()
+  SEP ()
+  POST [ tptr trelation ]
+  EX pr:val, EX pn:val, PROP ()
+  LOCAL(temp ret_temp pr)
+  SEP (relation_rep (empty_relation pr pn) pr).
 
-(* Definition RL_NewCursor_spec : ident * funspec := *)
-(*   DECLARE _RL_NewCursor *)
-(*   WITH r:relation, p:val *)
-(*   PRE [ _relation OF tptr trelation ] *)
-(*   PROP () *)
-(*   LOCAL (temp _relation p) *)
-(*   SEP (relation_rep r p) *)
-(*   POST [ tptr tcursor ] *)
-(*   EX p':val, PROP () *)
-(*   LOCAL(temp ret_temp p') *)
-(*   SEP (relation_rep r p * cursor_rep empty_cursor p'). *)
+Definition RL_NewCursor_spec : ident * funspec :=
+  DECLARE _RL_NewCursor
+  WITH r:relation val, p:val
+  PRE [ _relation OF tptr trelation ]
+  PROP ()
+  LOCAL (temp _relation p)
+  SEP (relation_rep r p)
+  POST [ tptr tcursor ]
+  EX p':val, PROP ()
+  LOCAL(temp ret_temp p')
+  SEP (relation_rep r p * cursor_rep empty_cursor r p').
 
-(* (**  *)
-(*     GPROG *)
-(*  **) *)
+(**
+    GPROG
+ **)
 
-(* Definition Gprog : funspecs := *)
-(*         ltac:(with_library prog [ *)
-(*                              createNewNode_spec; RL_NewRelation_spec; RL_NewCursor_spec *)
-(*  ]). *)
-
-
-(* (** *)
-(*     FUNCTION BODIES PROOFS *)
-(*  **) *)
-
-(* Lemma body_createNewNode: semax_body Vprog Gprog f_createNewNode createNewNode_spec. *)
-(* Proof. *)
-(* start_function. *)
-(* (* forward_call (Tstruct _BtNode noattr). *) *)
-(* Admitted. *)
-
-(* Lemma body_NewRelation: semax_body Vprog Gprog f_RL_NewRelation RL_NewRelation_spec. *)
-(* Proof. *)
-(* start_function. *)
-(* forward_call(true). *)
-(* Intros vret. *)
-(* forward_if (PROP () LOCAL (temp _pRootNode vret) SEP (btnode_rep nil vret; emp)). *)
-(* - rewrite prop_sepcon2. entailer!. admit. *)
-(* - forward. *)
-(*   entailer!. Exists (Vint(Int.repr 0)). entailer!. *)
-(*   Exists nullval. Exists nullval. entailer!. *)
-(*   rewrite prop_sepcon2. entailer!. admit. *)
-(* -forward. entailer!. *)
-(* - (* forward_call (Tstruct _Relation noattr). *) admit. *)
-(* Admitted. *)
-(* (* Some confusion between tuint and tulong *) *)
+Definition Gprog : funspecs :=
+        ltac:(with_library prog [
+                             createNewNode_spec; RL_NewRelation_spec; RL_NewCursor_spec
+ ]).
 
 
-(* Lemma body_NewCursor: semax_body Vprog Gprog f_RL_NewCursor RL_NewCursor_spec. *)
-(* Proof. *)
-(* start_function. *)
-(* forward_if (PROP() LOCAL(temp _relation p) SEP(relation_rep r p)). *)
-(* - admit. *)
-(* - forward. auto. *)
-(* - subst p. admit.               (* how to use forward_call here? *) *)
-(* - (* forward_call (Tstruct _Cursor noattr). *) (*tuint and tulong*) *)
-(*   admit. *)
-(* Admitted. *)
+(**
+    FUNCTION BODIES PROOFS
+ **)
+
+Lemma body_createNewNode: semax_body Vprog Gprog f_createNewNode createNewNode_spec.
+Proof.
+start_function.
+forward_call (tbtnode).
+(* type confusion tuint tulong *)
+Admitted.
+
+
+Lemma body_NewRelation: semax_body Vprog Gprog f_RL_NewRelation RL_NewRelation_spec.
+Proof.
+start_function.
+forward_call(true).
+Intros vret.
+forward_if (PROP ( )  LOCAL (temp _pRootNode vret)  SEP (btnode_rep (empty_node vret) vret; emp)).
+- subst vret.
+  forward. entailer!.
+- forward.
+  entailer!.
+- (* forward_call trelation. *)
+(* tuint and tulong again *)
+  admit.
+Admitted.
+
+Lemma body_NewCursor: semax_body Vprog Gprog f_RL_NewCursor RL_NewCursor_spec.
+Proof.
+start_function.
+forward_if (PROP() LOCAL(temp _relation p) SEP(relation_rep r p)).
+- unfold relation_rep. admit.
+- forward. auto.
+- subst p. hint. admit.
+-               (* forward_call tcursor.         (* tuint tulong *) *)
+  admit.
+Admitted.
