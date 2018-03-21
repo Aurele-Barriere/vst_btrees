@@ -11,11 +11,17 @@
  * Created on September 23, 2017, 7:31 PM
  */
 
+// malloc as an extern function
+#include <stddef.h>
+extern void * malloc (unsigned int n);
+extern void free (void * ptr);
 #include "relation.h"
 #include <assert.h>
-#include <stdlib.h>
+//#include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+
+
 
 /* Type declarations */
 typedef struct BtNode BtNode;

@@ -217,7 +217,7 @@ Definition relation_rep (r:relation val) (p:val):mpred :=
     EX p':val,
           field_at Tsh trelation (DOT _root) p' p *
           btnode_rep n p' *
-          field_at Tsh trelation (DOT _numRecords) (Vint(Int.repr(Z.of_nat c))) p *
+          field_at Tsh trelation (DOT _numRecords) (Vlong(Int64.repr(Z.of_nat c))) p * (* long?int? *)
           malloc_token Tsh trelation p
   end.
 
@@ -239,7 +239,6 @@ Fixpoint cursor_valid_bool {X:Type} (c:cursor X): bool :=
   | (b,i)::c' => match b with btnode ptr0 le x => (i <=? (numKeys_le le))%nat && cursor_valid_bool c' end
   end.                          (* might be incomplete *)
 
-
 Definition cursor_rep (c:cursor val) (r:relation val) (p:val):mpred :=
   malloc_token Tsh tcursor p *
   field_at Tsh tcursor (DOT _currNode) (getCurrVal c) p *
@@ -252,9 +251,9 @@ Definition cursor_rep (c:cursor val) (r:relation val) (p:val):mpred :=
 (* what about the list length that can be shorter than the array? *)
 (* also the index might be not exactly the same for intern nodes (no -1) *)
 
-(* (** *)
-(*     FUNCTION SPECIFICATIONS *)
-(*  **) *)
+(**
+    FUNCTION SPECIFICATIONS
+ **)
 Definition empty_node (p:val):node val := (btnode val) None (nil val) p.
 Definition empty_relation (pr:val) (pn:val): relation val := ((empty_node pn),0%nat,pr).
 Definition empty_cursor := []:cursor val.
@@ -311,34 +310,102 @@ Definition Gprog : funspecs :=
 
 Lemma body_createNewNode: semax_body Vprog Gprog f_createNewNode createNewNode_spec.
 Proof.
-start_function.
-forward_call (tbtnode).
-(* type confusion tuint tulong *)
+  start_function.
+  forward_call tbtnode.
+  - admit.                      (* typecheck_error? *)
+  - entailer!. admit.           (* false! *)
+  - split. unfold sizeof. simpl. rep_omega.
+    split. auto. admit.
+  - Intros vret.
+    forward_if (PROP (vret<>nullval)
+     LOCAL (temp _newNode vret; temp _isLeaf (Val.of_bool isLeaf))
+     SEP (if eq_dec vret nullval
+          then emp
+          else malloc_token Tsh tbtnode vret * data_at_ Tsh tbtnode vret; emp)).
+    + admit.
+    + forward. rewrite if_true; auto.
+      admit.                    (* change the spec if malloc fails *)
+    + forward. rewrite if_false; auto. entailer!.
+    + Intros. rewrite if_false; auto. Intros.
+      forward.                  (* newNode->numKeys = 0 *)
+      forward.                  (* newnode->isLeaf=isLeaf *)
+      forward.                  (* newnode->ptr0=null *)
+      forward.                  (* return newnode *)
+      Exists vret. entailer!.
+      unfold_data_at 1%nat.
+      entailer!.
+      admit.
 Admitted.
-
 
 Lemma body_NewRelation: semax_body Vprog Gprog f_RL_NewRelation RL_NewRelation_spec.
 Proof.
 start_function.
 forward_call(true).
 Intros vret.
-forward_if (PROP ( )  LOCAL (temp _pRootNode vret)  SEP (btnode_rep (empty_node vret) vret; emp)).
+forward_if (PROP (vret<>nullval)  LOCAL (temp _pRootNode vret)  SEP (btnode_rep (empty_node vret) vret; emp)).
 - subst vret.
   forward. entailer!.
 - forward.
   entailer!.
-- (* forward_call trelation. *)
-(* tuint and tulong again *)
-  admit.
+- forward_call trelation.
+  + admit.
+  + entailer!.
+    admit.                      (* false *)
+  + split. unfold sizeof. simpl. rep_omega.
+    split. auto. admit.
+  + Intros newrel.
+    forward_if(PROP (newrel<>nullval)
+     LOCAL (temp _pNewRelation newrel; temp _pRootNode vret)
+     SEP (if eq_dec newrel nullval
+          then emp
+          else malloc_token Tsh trelation newrel * data_at_ Tsh trelation newrel;
+          btnode_rep (empty_node vret) vret)).
+    * apply denote_tc_test_eq_split.
+      entailer!. admit.
+      entailer!.
+    * rewrite if_true; auto. subst newrel.
+      forward_call (tbtnode, vret).
+      { admit. }
+      { forward. admit. }
+    * rewrite if_false; auto.
+      forward.
+      entailer!. rewrite if_false; auto.
+    * Intros. rewrite if_false; auto. Intros.
+      forward.                  (* pnewrelation->root = prootnode *)
+      forward.                  (* pnewrelation->numrecords=0 *)
+      forward.                  (* return pnewrelation *)
+      Exists newrel. Exists vret. Exists vret.
+      entailer!.
+      unfold_data_at 1%nat. entailer!.
 Admitted.
 
 Lemma body_NewCursor: semax_body Vprog Gprog f_RL_NewCursor RL_NewCursor_spec.
 Proof.
 start_function.
 forward_if (PROP() LOCAL(temp _relation p) SEP(relation_rep r p)).
-- unfold relation_rep. admit.
+- admit.
 - forward. auto.
-- subst p. hint. admit.
--               (* forward_call tcursor.         (* tuint tulong *) *)
+- subst p.
+  (* forward_call tt. *)
   admit.
+- forward_call tcursor.
+  + admit.
+  + entailer!. admit.
+  + split. unfold sizeof. simpl. rep_omega.
+    split. auto. admit.
+  + Intros vret.
+    forward_if ((PROP ( )
+     LOCAL (temp _cursor vret; temp _relation p)
+     SEP (if eq_dec vret nullval
+          then emp
+          else malloc_token Tsh tcursor vret * data_at_ Tsh tcursor vret; 
+          relation_rep r p))).
+    * admit.
+    * rewrite if_true; auto.
+      forward. Exists nullval. entailer!. admit. (* false *)
+    * forward. rewrite if_false; auto.
+    * rewrite if_true by admit.
+      unfold relation_rep.
+      admit.
+      (* forward.                  (* cursor->relation=relation *) *)
 Admitted.
