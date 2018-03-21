@@ -15,7 +15,9 @@ Require Import VST.floyd.field_at_wand.
     BTREES FORMAL MODEL
 **)
 
-Section BTrees.
+Definition Fanout := 15%nat.
+Definition MaxTreeDepth := 20%nat.
+
 Definition key := Z.            (* unsigned long in C *)
 Definition V:Type := Z.         (* I need some type for value_rep *)
 Variable b : nat.
@@ -25,7 +27,7 @@ Inductive entry (X:Type): Type :=
      | keyval: key -> V -> X -> entry X
      | keychild: key -> node X -> entry X
 with node (X:Type): Type :=
-     | btnode: option (node X) -> listentry X -> X -> node X
+     | btnode: option (node X) -> listentry X -> bool -> X -> node X
 with listentry (X:Type): Type :=
      | nil: listentry X
      | cons: entry X -> listentry X -> listentry X.
@@ -44,7 +46,7 @@ Fixpoint max_nat (m : nat) (n : nat) : nat :=
 
 Fixpoint node_depth {X:Type} (n:node X) : nat :=
   match n with
-    btnode ptr0 le _ => max_nat (listentry_depth le)
+    btnode ptr0 le _ _ => max_nat (listentry_depth le)
                                 (match ptr0 with
                                  | None => O
                                  | Some n' => S (node_depth n') end)
@@ -73,7 +75,7 @@ Fixpoint nth_entry_le {X:Type} (i:nat) (le:listentry X): option (entry X) :=
   end.                          (* USEFUL? *)
 
 Fixpoint move_to_first {X:Type} (c:cursor X) (curr:node X): cursor X:=
-  match curr with btnode ptr0 le _ =>
+  match curr with btnode ptr0 le _ _ =>
                   match ptr0 with
                   | Some n => move_to_first ((curr,0%nat)::c) n
                   | None => match le with
@@ -93,7 +95,7 @@ Fixpoint le_length {X:Type} (le:listentry X) : nat :=
   end.
 
 Definition node_length {X:Type} (n:node X) : nat :=
-  match n with btnode ptr0 le _ =>
+  match n with btnode ptr0 le _ _ =>
                match ptr0 with
                | None => le_length le
                | Some _ => S (le_length le)
@@ -126,7 +128,7 @@ Fixpoint nth_node_le {X:Type} (i:nat) (le:listentry X): option (node X) :=
   end.
 
 Definition nth_node {X:Type} (i:nat) (n:node X): option (node X) :=
-  match n with btnode ptr0 le _ =>
+  match n with btnode ptr0 le _ _ =>
                match ptr0 with
                | None => nth_node_le i le
                | Some n' => match i with
@@ -165,16 +167,13 @@ Fixpoint numKeys_le {X:Type} (le:listentry X) : nat :=
   end.
 
 Definition numKeys {X:Type} (n:node X) : nat :=
-  match n with btnode ptr0 le x => numKeys_le le end.
+  match n with btnode ptr0 le _ x => numKeys_le le end.
 
 Definition isLeaf {X:Type} (n:node X) : bool :=
-  match n with btnode ptr0 le w => match ptr0 with
-                                   | None => true
-                                   | Some _ => false end
-  end.
+  match n with btnode ptr0 le b w => b end.
 
 Definition getval (n:node val): val :=
-  match n with btnode _ _ x => x end.
+  match n with btnode _ _ _ x => x end.
 
 Fixpoint le_to_list (le:listentry val) : list (val * (val + val)) :=
   match le with
@@ -186,23 +185,25 @@ Fixpoint le_to_list (le:listentry val) : list (val * (val + val)) :=
      end) :: le_to_list le'
   end.
 
+Definition le_to_list_complete (le:listentry val):=
+  le_to_list le ++ list_repeat (Fanout - numKeys_le le) (Vundef, inl Vundef).
+                        
 Fixpoint entry_rep (e:entry val):=
   match e with
-  | keychild _ n => match n with btnode _ _ x => btnode_rep n x end
+  | keychild _ n => match n with btnode _ _ _ x => btnode_rep n x end
   | keyval _ v x => value_rep v x
   end
 with btnode_rep (n:node val) (p:val):mpred :=
-  match n with btnode ptr0 le x =>
+  match n with btnode ptr0 le b x =>
   !!(x=p) &&
   malloc_token Tsh tbtnode p *
   field_at Tsh tbtnode (DOT _numKeys) (Vint(Int.repr (Z.of_nat (numKeys n)))) p *
+  field_at Tsh tbtnode (DOT _isLeaf) (Val.of_bool b) p *
   match ptr0 with
-  | None => field_at Tsh tbtnode (DOT _isLeaf) (Val.of_bool true) p *
-            field_at Tsh tbtnode (DOT _ptr0) nullval p
-  | Some n' => field_at Tsh tbtnode (DOT _isLeaf) (Val.of_bool false) p *
-               match n' with btnode _ _ p' => field_at Tsh tbtnode (DOT _ptr0) p' p * btnode_rep n' p' end
+  | None => field_at Tsh tbtnode (DOT _ptr0) nullval p
+  | Some n' => match n' with btnode _ _ _ p' => field_at Tsh tbtnode (DOT _ptr0) p' p * btnode_rep n' p' end
   end *
-  field_at Tsh tbtnode (DOT _entries) (le_to_list le) p *
+  field_at Tsh tbtnode (DOT _entries) (le_to_list_complete le) p *
   le_iter_sepcon le
   end
 with le_iter_sepcon (le:listentry val):mpred :=
@@ -224,7 +225,7 @@ Definition relation_rep (r:relation val) (p:val):mpred :=
 Definition getCurrVal (c:cursor val): val :=
   match c with
   | [] => nullval
-  | (n,_)::_ => match n with btnode _ _ x => x end
+  | (n,_)::_ => match n with btnode _ _ _ x => x end
   end.
 
 Definition getEntryIndex {X:Type} (c:cursor X) : nat :=
@@ -236,26 +237,27 @@ Definition getEntryIndex {X:Type} (c:cursor X) : nat :=
 Fixpoint cursor_valid_bool {X:Type} (c:cursor X): bool :=
   match c with
   | [] => true
-  | (b,i)::c' => match b with btnode ptr0 le x => (i <=? (numKeys_le le))%nat && cursor_valid_bool c' end
+  | (b,i)::c' => match b with btnode ptr0 le _ x => (i <=? (numKeys_le le))%nat && cursor_valid_bool c' end
   end.                          (* might be incomplete *)
 
 Definition cursor_rep (c:cursor val) (r:relation val) (p:val):mpred :=
+  EX anc_end:list val, EX idx_end:list val,
   malloc_token Tsh tcursor p *
   field_at Tsh tcursor (DOT _currNode) (getCurrVal c) p *
   match r with (n,c,x) => field_at Tsh tcursor (DOT _relation) x p end *
   field_at Tsh tcursor (DOT _entryIndex) (Vint(Int.repr(Z.of_nat(getEntryIndex c)))) p *
   field_at Tsh tcursor (DOT _isValid) (Val.of_bool (cursor_valid_bool c)) p *
   field_at Tsh tcursor (DOT _level) (Vint(Int.repr(Zlength c))) p *
-  field_at Tsh tcursor (DOT _nextAncestorPointerIdx) (map (fun x => Vint(Int.repr(Z.of_nat(snd x)))) c) p * (* or its reverse? *)
-  field_at Tsh tcursor (DOT _ancestors) (map getval (map fst c)) p.
+  field_at Tsh tcursor (DOT _nextAncestorPointerIdx) ((map (fun x => Vint(Int.repr(Z.of_nat(snd x)))) c) ++ idx_end) p * (* or its reverse? *)
+  field_at Tsh tcursor (DOT _ancestors) ((map getval (map fst c)) ++ anc_end) p.
 (* what about the list length that can be shorter than the array? *)
 (* also the index might be not exactly the same for intern nodes (no -1) *)
 
 (**
     FUNCTION SPECIFICATIONS
  **)
-Definition empty_node (p:val):node val := (btnode val) None (nil val) p.
-Definition empty_relation (pr:val) (pn:val): relation val := ((empty_node pn),0%nat,pr).
+Definition empty_node (b:bool) (p:val):node val := (btnode val) None (nil val) b p.
+Definition empty_relation (pr:val) (pn:val): relation val := ((empty_node true pn),0%nat,pr).
 Definition empty_cursor := []:cursor val.
 
 Definition createNewNode_spec : ident * funspec :=
@@ -268,7 +270,7 @@ Definition createNewNode_spec : ident * funspec :=
   POST [ tptr tbtnode ]
   EX p:val, PROP ()
   LOCAL (temp ret_temp p)
-  SEP (btnode_rep (empty_node p) p).
+  SEP (btnode_rep (empty_node isLeaf p) p).
 
 Definition RL_NewRelation_spec : ident * funspec :=
   DECLARE _RL_NewRelation
@@ -292,7 +294,9 @@ Definition RL_NewCursor_spec : ident * funspec :=
   POST [ tptr tcursor ]
   EX p':val, PROP ()
   LOCAL(temp ret_temp p')
-  SEP (relation_rep r p * cursor_rep empty_cursor r p').
+  SEP (relation_rep r p * (if (eq_dec p' nullval)
+                           then emp
+                           else cursor_rep empty_cursor r p')).
 
 (**
     GPROG
@@ -334,7 +338,6 @@ Proof.
       Exists vret. entailer!.
       unfold_data_at 1%nat.
       entailer!.
-      admit.
 Admitted.
 
 Lemma body_NewRelation: semax_body Vprog Gprog f_RL_NewRelation RL_NewRelation_spec.
@@ -342,7 +345,7 @@ Proof.
 start_function.
 forward_call(true).
 Intros vret.
-forward_if (PROP (vret<>nullval)  LOCAL (temp _pRootNode vret)  SEP (btnode_rep (empty_node vret) vret; emp)).
+forward_if (PROP (vret<>nullval)  LOCAL (temp _pRootNode vret)  SEP (btnode_rep (empty_node true vret) vret; emp)).
 - subst vret.
   forward. entailer!.
 - forward.
@@ -359,7 +362,7 @@ forward_if (PROP (vret<>nullval)  LOCAL (temp _pRootNode vret)  SEP (btnode_rep 
      SEP (if eq_dec newrel nullval
           then emp
           else malloc_token Tsh trelation newrel * data_at_ Tsh trelation newrel;
-          btnode_rep (empty_node vret) vret)).
+          btnode_rep (empty_node true vret) vret)).
     * apply denote_tc_test_eq_split.
       entailer!. admit.
       entailer!.
@@ -376,7 +379,7 @@ forward_if (PROP (vret<>nullval)  LOCAL (temp _pRootNode vret)  SEP (btnode_rep 
       forward.                  (* return pnewrelation *)
       Exists newrel. Exists vret. Exists vret.
       entailer!.
-      unfold_data_at 1%nat. entailer!.
+      unfold_data_at 1%nat. cancel.
 Admitted.
 
 Lemma body_NewCursor: semax_body Vprog Gprog f_RL_NewCursor RL_NewCursor_spec.
@@ -386,7 +389,7 @@ forward_if (PROP() LOCAL(temp _relation p) SEP(relation_rep r p)).
 - admit.
 - forward. auto.
 - subst p.
-  (* forward_call tt. *)
+  (* forward_call tt. *)              (* telling me to import VST.floyd.library, but it has been done *)
   admit.
 - forward_call tcursor.
   + admit.
@@ -394,7 +397,7 @@ forward_if (PROP() LOCAL(temp _relation p) SEP(relation_rep r p)).
   + split. unfold sizeof. simpl. rep_omega.
     split. auto. admit.
   + Intros vret.
-    forward_if ((PROP ( )
+    forward_if ((PROP (vret<>nullval)
      LOCAL (temp _cursor vret; temp _relation p)
      SEP (if eq_dec vret nullval
           then emp
@@ -402,10 +405,57 @@ forward_if (PROP() LOCAL(temp _relation p) SEP(relation_rep r p)).
           relation_rep r p))).
     * admit.
     * rewrite if_true; auto.
-      forward. Exists nullval. entailer!. admit. (* false *)
-    * forward. rewrite if_false; auto.
-    * rewrite if_true by admit.
-      unfold relation_rep.
-      admit.
-      (* forward.                  (* cursor->relation=relation *) *)
+      forward. Exists nullval. entailer!.
+    * forward. rewrite if_false; auto. entailer!.
+    * Intros. rewrite if_false; auto. Intros.
+      forward.                  (* cursor->relation=relation *)
+      forward.                  (* cursor->currnode=null *)
+      forward.                  (* cursor->entryIndex=0 *)
+      forward.                  (* cursor->isValid=0 *)
+      forward.                  (* cursor->level=0 *)
+      autorewrite with norm. simpl.
+
+      Locate forward_for_simple_bound.
+      Locate forward_for_simple_bound'.
+      
+      Ltac forward_for_simple_bound n Pre :=
+        check_Delta; check_POSTCONDITION;
+        repeat match goal with |-
+                               semax _ _ (Ssequence (Ssequence (Ssequence _ _) _) _) _ =>
+                               apply -> seq_assoc; abbreviate_semax
+               end;
+        first [
+            match type of n with
+              ?t => first [ unify t Z | elimtype (Type_of_bound_in_forward_for_should_be_Z_but_is t)]
+            end;
+            match type of Pre with
+              ?t => first [unify t (environ -> mpred); fail 1 | elimtype (Type_of_invariant_in_forward_for_should_be_environ_arrow_mpred_but_is t)]
+            end
+          | simple eapply semax_seq';
+            [forward_for_simple_bound' n Pre
+            | cbv beta; simpl update_tycon; abbreviate_semax  ]
+          | eapply semax_post_flipped';
+            [forward_for_simple_bound' n Pre
+            | ]
+          ].
+
+      Definition n:=20.
+      pose (n:=20).
+      pose (Pre:=(EX i:Z,
+            PROP ()
+            LOCAL(temp _cursor vret; temp _relation p)         
+            SEP(malloc_token Tsh tcursor vret;
+                relation_rep r p;
+                data_at Tsh tcursor
+               (force_val (sem_cast_pointer p),
+               (Vint (Int.repr 0),
+               (Vlong (Int64.repr 0),
+               (Vint (Int.repr 0),
+               (Vint (Int.repr 0),
+               (list_repeat (Z.to_nat i) (Vint(Int.repr 0)) ++  list_repeat (MaxTreeDepth - (Z.to_nat i)) Vundef,
+               (list_repeat (Z.to_nat i) nullval ++ list_repeat (MaxTreeDepth - (Z.to_nat i)) Vundef))))))) vret))%assert).
+
+simple eapply semax_seq'.
+
+(* forward_for_simple_bound n Pre. *)
 Admitted.
