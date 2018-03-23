@@ -32,8 +32,20 @@ with listentry (X:Type): Type :=
      | nil: listentry X
      | cons: entry X -> listentry X -> listentry X.
 
-Definition cursor (X:Type): Type := list (node X * nat). (* ancestors and index *)
+Inductive index: Type :=
+| im: index
+| ip: nat -> index.
+
+Definition nat_to_index (n:nat) := ip n.
+
+Definition cursor (X:Type): Type := list (node X * index). (* ancestors and index *)
 Definition relation (X:Type): Type := node X * nat * X.  (* root and numRecords *)
+
+Definition next_index (i:index) : index :=
+  match i with
+  | im => ip (O%nat)
+  | ip n => ip (S n)
+  end.
 
 Fixpoint max_nat (m : nat) (n : nat) : nat :=
   match m with
@@ -42,6 +54,15 @@ Fixpoint max_nat (m : nat) (n : nat) : nat :=
              | O => m
              | S n' => S (max_nat m' n')
              end)
+  end.
+
+Definition max_index (i1:index) (i2:index): index :=
+  match i1 with
+  | im => i2
+  | ip n1 => match i2 with
+            | im => i1
+            | ip n2 => ip (max_nat n1 n2)
+             end
   end.
 
 Fixpoint node_depth {X:Type} (n:node X) : nat :=
@@ -77,11 +98,11 @@ Fixpoint nth_entry_le {X:Type} (i:nat) (le:listentry X): option (entry X) :=
 Fixpoint move_to_first {X:Type} (c:cursor X) (curr:node X): cursor X:=
   match curr with btnode ptr0 le _ _ =>
                   match ptr0 with
-                  | Some n => move_to_first ((curr,0%nat)::c) n
+                  | Some n => move_to_first ((curr,im)::c) n
                   | None => match le with
                             | nil => c (* possible? *)
                             | cons e le' => match e with
-                                            | keyval _ _ _ => ((curr,0%nat)::c)
+                                            | keyval _ _ _ => ((curr,ip (0%nat))::c)
                                             | keychild _ _ => c (* not possible, we would have a ptr0 otherwise *)
                                             end
                             end
@@ -95,19 +116,20 @@ Fixpoint le_length {X:Type} (le:listentry X) : nat :=
   end.
 
 Definition node_length {X:Type} (n:node X) : nat :=
-  match n with btnode ptr0 le _ _ =>
-               match ptr0 with
-               | None => le_length le
-               | Some _ => S (le_length le)
-               end
+  match n with btnode ptr0 le _ _ => le_length le end.
+
+Definition index_leb_nat (i:index) (n:nat) : bool :=
+  match i with
+  | im => true
+  | ip n' => (n' <=? n)%nat
   end.
 
 Fixpoint move_to_next_partial {X:Type} (c:cursor X) : cursor X :=
   match c with
   | [] => []
   | (n,i)::c' =>
-    match (i <=? (node_length n) -1 )%nat with
-    | true => (n,S i)::c'
+    match (index_leb_nat i (node_length n -2)) with 
+    | true => (n,next_index i)::c'
     | false => move_to_next_partial c'
     end
   end.
@@ -127,24 +149,63 @@ Fixpoint nth_node_le {X:Type} (i:nat) (le:listentry X): option (node X) :=
             end
   end.
 
-Definition nth_node {X:Type} (i:nat) (n:node X): option (node X) :=
+Definition nth_node {X:Type} (i:index) (n:node X): option (node X) :=
   match n with btnode ptr0 le _ _ =>
-               match ptr0 with
-               | None => nth_node_le i le
-               | Some n' => match i with
-                            | O => Some n'
-                            | S i' => nth_node_le i' le
-                            end
+               match i with
+               | im => ptr0
+               | ip na => nth_node_le na le
                end
   end.
 
-Definition move_to_next {X:Type} (c:cursor X): cursor X :=
+Definition move_to_next {X:Type} (c:cursor X): cursor X * bool :=
   match (move_to_next_partial c) with
-  | [] => c                     (* C program returns false here *)
+  | [] => (c,false)                     (* C program returns false here *)
   | (n,i)::c' => match nth_node i n with
-                 | Some n' => move_to_first c n'
-                 | None => c    (* possible at leaf nodes *)
+                 | Some n' => (move_to_first c n',true)
+                 | None => (c,true)    (* possible at leaf nodes *)
                  end
+  end.
+
+Definition getRecord (c:cursor val): val :=
+  match c with
+  | [] => nullval
+  | (n,i)::c' =>
+    match n with
+      btnode ptr0 le b x =>
+      match i with
+      | im => nullval              (* no -1 at leaf nodes *)
+      | ip ii =>
+        match (nth_entry_le ii le) with
+        | None => nullval
+        | Some e =>
+          match e with
+          | keychild _ _ => nullval
+          | keyval k v x => x
+          end
+        end
+      end
+    end
+  end.
+
+Definition getKey {X:Type} (c:cursor X): option key :=
+  match c with
+  | [] => None
+  | (n,i)::c' =>
+    match n with
+      btnode ptr0 le b x =>
+      match i with
+      | im => None            (* ptr0 has no key *)
+      | ip ii => 
+        match (nth_entry_le ii le) with
+        | None => None
+        | Some e =>
+          match e with
+          | keychild k _ => Some k
+          | keyval k _ _ => Some k
+          end
+        end
+      end
+    end
   end.
 
 (**
@@ -228,27 +289,33 @@ Definition getCurrVal (c:cursor val): val :=
   | (n,_)::_ => match n with btnode _ _ _ x => x end
   end.
 
-Definition getEntryIndex {X:Type} (c:cursor X) : nat :=
+Definition getEntryIndex {X:Type} (c:cursor X) : index :=
   match c with
   | (n,i)::_ => i
-  | [] => 0%nat
+  | [] => ip (0%nat)
   end.
 
 Fixpoint cursor_valid_bool {X:Type} (c:cursor X): bool :=
   match c with
   | [] => true
-  | (b,i)::c' => match b with btnode ptr0 le _ x => (i <=? (numKeys_le le))%nat && cursor_valid_bool c' end
+  | (b,i)::c' => match b with btnode ptr0 le _ x => (index_leb_nat i (numKeys_le le -1)) && cursor_valid_bool c' end
   end.                          (* might be incomplete *)
+
+Definition rep_index (i:index):=
+  match i with
+  | im => Vint(Int.repr(-1))
+  | ip n => Vint(Int.repr(Z.of_nat n))
+  end.
 
 Definition cursor_rep (c:cursor val) (r:relation val) (p:val):mpred :=
   EX anc_end:list val, EX idx_end:list val,
   malloc_token Tsh tcursor p *
   field_at Tsh tcursor (DOT _currNode) (getCurrVal c) p *
   match r with (n,c,x) => field_at Tsh tcursor (DOT _relation) x p end *
-  field_at Tsh tcursor (DOT _entryIndex) (Vint(Int.repr(Z.of_nat(getEntryIndex c)))) p *
+  field_at Tsh tcursor (DOT _entryIndex) (rep_index(getEntryIndex c)) p *
   field_at Tsh tcursor (DOT _isValid) (Val.of_bool (cursor_valid_bool c)) p *
   field_at Tsh tcursor (DOT _level) (Vint(Int.repr(Zlength c))) p *
-  field_at Tsh tcursor (DOT _nextAncestorPointerIdx) ((map (fun x => Vint(Int.repr(Z.of_nat(snd x)))) c) ++ idx_end) p * (* or its reverse? *)
+  field_at Tsh tcursor (DOT _nextAncestorPointerIdx) ((map (fun x => (rep_index (snd x)))  c) ++ idx_end) p * (* or its reverse? *)
   field_at Tsh tcursor (DOT _ancestors) ((map getval (map fst c)) ++ anc_end) p.
 (* what about the list length that can be shorter than the array? *)
 (* also the index might be not exactly the same for intern nodes (no -1) *)
@@ -259,6 +326,36 @@ Definition cursor_rep (c:cursor val) (r:relation val) (p:val):mpred :=
 Definition empty_node (b:bool) (p:val):node val := (btnode val) None (nil val) b p.
 Definition empty_relation (pr:val) (pn:val): relation val := ((empty_node true pn),0%nat,pr).
 Definition empty_cursor := []:cursor val.
+
+(* the malloc_spec from the floyd library, modified so that it takes a long argument *)
+Definition malloc_spec'  {cs: compspecs} :=
+   WITH t:type
+   PRE [ 1%positive OF tulong ]
+       PROP (0 <= sizeof t <= Int64.max_unsigned;
+                complete_legal_cosu_type t = true;
+                natural_aligned natural_alignment t = true)
+       LOCAL (temp 1%positive (Vlong (Int64.repr (sizeof t))))
+       SEP ()
+    POST [ tptr tvoid ] EX p:_,
+       PROP ()
+       LOCAL (temp ret_temp p)
+       SEP (if eq_dec p nullval then emp
+            else (malloc_token Tsh t p * data_at_ Tsh t p)).
+
+Definition malloc_spec  {cs: compspecs} (prog: program) :=
+   try_spec prog "_malloc" malloc_spec'.
+Arguments malloc_spec {cs} prog / .
+
+Definition library_G  {cs: compspecs} prog :=
+  exit_spec prog ++ malloc_spec prog ++ free_spec prog.
+
+Ltac with_library prog G := 
+ let x := constr:(library_G prog) in
+ let x := eval hnf in x in 
+ let x := eval simpl in x in
+ let y := constr:(x++G) in
+ let y := eval cbv beta iota delta [app] in y in 
+ with_library' prog y.
 
 Definition createNewNode_spec : ident * funspec :=
   DECLARE _createNewNode
@@ -298,15 +395,28 @@ Definition RL_NewCursor_spec : ident * funspec :=
                            then emp
                            else cursor_rep empty_cursor r p')).
 
+Definition RL_MoveToNext_spec : ident * funspec :=
+  DECLARE _RL_MoveToNext
+  WITH c:cursor val, p:val, rel:relation val, prel:val
+  PRE [ _btCursor OF tptr tcursor ]
+  PROP ()
+  LOCAL (temp _btCursor p)
+  SEP (cursor_rep c rel p; relation_rep rel prel)
+  POST [ tint ]
+  EX b:bool, EX c':cursor val,
+  PROP (move_to_next c = (c',b))
+  LOCAL (temp ret_temp (Val.of_bool b))
+  SEP(cursor_rep c' rel p; relation_rep rel prel).
+                             
 (**
     GPROG
  **)
 
 Definition Gprog : funspecs :=
         ltac:(with_library prog [
-                             createNewNode_spec; RL_NewRelation_spec; RL_NewCursor_spec
+                             createNewNode_spec; RL_NewRelation_spec; RL_NewCursor_spec;
+                             RL_MoveToNext_spec(* ; malloc_spec *)
  ]).
-
 
 (**
     FUNCTION BODIES PROOFS
@@ -317,8 +427,8 @@ Proof.
   start_function.
   forward_call tbtnode.
   - admit.                      (* typecheck_error? *)
-  - entailer!. admit.           (* false! *)
-  - split. unfold sizeof. simpl. rep_omega.
+  - simpl. entailer!. admit.           (* false! *)
+  - split. simpl. rep_omega.
     split. auto. admit.
   - Intros vret.
     forward_if (PROP (vret<>nullval)
@@ -418,27 +528,9 @@ forward_if (PROP() LOCAL(temp _relation p) SEP(relation_rep r p)).
       Locate forward_for_simple_bound.
       Locate forward_for_simple_bound'.
       
-      Ltac forward_for_simple_bound n Pre :=
-        check_Delta; check_POSTCONDITION;
-        repeat match goal with |-
-                               semax _ _ (Ssequence (Ssequence (Ssequence _ _) _) _) _ =>
-                               apply -> seq_assoc; abbreviate_semax
-               end;
-        first [
-            match type of n with
-              ?t => first [ unify t Z | elimtype (Type_of_bound_in_forward_for_should_be_Z_but_is t)]
-            end;
-            match type of Pre with
-              ?t => first [unify t (environ -> mpred); fail 1 | elimtype (Type_of_invariant_in_forward_for_should_be_environ_arrow_mpred_but_is t)]
-            end
-          | simple eapply semax_seq';
-            [forward_for_simple_bound' n Pre
-            | cbv beta; simpl update_tycon; abbreviate_semax  ]
-          | eapply semax_post_flipped';
-            [forward_for_simple_bound' n Pre
-            | ]
-          ].
-
+      (* | simple eapply semax_seq'; *)
+      (*     [forward_for_simple_bound' n Pre *)
+      (*     | cbv beta; simpl update_tycon; abbreviate_semax  ] *)
       Definition n:=20.
       pose (n:=20).
       pose (Pre:=(EX i:Z,
@@ -453,9 +545,40 @@ forward_if (PROP() LOCAL(temp _relation p) SEP(relation_rep r p)).
                (Vint (Int.repr 0),
                (Vint (Int.repr 0),
                (list_repeat (Z.to_nat i) (Vint(Int.repr 0)) ++  list_repeat (MaxTreeDepth - (Z.to_nat i)) Vundef,
-               (list_repeat (Z.to_nat i) nullval ++ list_repeat (MaxTreeDepth - (Z.to_nat i)) Vundef))))))) vret))%assert).
-
-simple eapply semax_seq'.
-
+                (list_repeat (Z.to_nat i) nullval ++ list_repeat (MaxTreeDepth - (Z.to_nat i)) Vundef))))))) vret))%assert).
+      
+      simple eapply semax_seq'.
+      { Locate semax_for_const_bound_const_init.
+        pose(Pre':= (PROP ( )
+     LOCAL (temp _cursor vret; temp _relation p)
+     SEP (malloc_token Tsh tcursor vret;
+     data_at Tsh tcursor
+       (force_val (sem_cast_pointer p),
+       (Vint (Int.repr 0),
+       (Vlong (Int64.repr 0),
+       (Vint (Int.repr 0),
+       (Vint (Int.repr 0),
+       ([Vundef; Vundef; Vundef; Vundef; Vundef; Vundef; Vundef; Vundef; Vundef; Vundef; Vundef;
+        Vundef; Vundef; Vundef; Vundef; Vundef; Vundef; Vundef; Vundef; Vundef],
+       [Vundef; Vundef; Vundef; Vundef; Vundef; Vundef; Vundef; Vundef; Vundef; Vundef; Vundef;
+       Vundef; Vundef; Vundef; Vundef; Vundef; Vundef; Vundef; Vundef; Vundef])))))) vret;
+     relation_rep r p))). fold Pre'.
+        try eapply (semax_for_const_bound_const_init n Pre) with (_i:=_i) (hi:=20) (Delta:=Delta).
+        (* this one fails but shouldn't ? *)
+        admit.
+      }
+      {  cbv beta. simpl update_tycon. abbreviate_semax. forward. }
 (* forward_for_simple_bound n Pre. *)
+Admitted.
+
+Lemma body_MoveToNext: semax_body Vprog Gprog f_RL_MoveToNext RL_MoveToNext_spec.
+Proof.
+start_function.
+unfold cursor_rep. Intros anc_end. Intros idx_end.
+forward.                        (* t'17=btCursor->currNode *)
+- autorewrite with norm. entailer!. unfold getCurrVal.
+  destruct c. auto. admit.
+-
+  (* we need to show that the current value is a node, represented in the memory *)
+  admit.
 Admitted.

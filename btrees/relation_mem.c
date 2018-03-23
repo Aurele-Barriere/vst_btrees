@@ -12,15 +12,13 @@
  */
 
 // malloc as an extern function
-#include <stddef.h>
-extern void * malloc (unsigned int n);
-extern void free (void * ptr);
 #include "relation.h"
 #include <assert.h>
-//#include <stdlib.h>
+#include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-
+#include <stddef.h>
+extern void * malloc (unsigned int n);
 
 
 /* Type declarations */

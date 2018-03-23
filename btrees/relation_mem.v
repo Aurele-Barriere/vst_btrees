@@ -37,7 +37,7 @@ Definition __IO_save_end : ident := 17%positive.
 Definition __IO_write_base : ident := 10%positive.
 Definition __IO_write_end : ident := 12%positive.
 Definition __IO_write_ptr : ident := 11%positive.
-Definition ___assert_fail : ident := 110%positive.
+Definition ___assert_fail : ident := 108%positive.
 Definition ___builtin_annot : ident := 63%positive.
 Definition ___builtin_annot_intval : ident := 64%positive.
 Definition ___builtin_bswap : ident := 57%positive.
@@ -178,7 +178,7 @@ Definition _entryIndex : ident := 51%positive.
 Definition _findChildIndex : ident := 203%positive.
 Definition _firstNodeSize : ident := 196%positive.
 Definition _found : ident := 212%positive.
-Definition _fprintf : ident := 112%positive.
+Definition _fprintf : ident := 111%positive.
 Definition _free : ident := 109%positive.
 Definition _freeRecord : ident := 118%positive.
 Definition _handleDeleteBtree : ident := 121%positive.
@@ -203,7 +203,7 @@ Definition _length : ident := 228%positive.
 Definition _level : ident := 53%positive.
 Definition _lowest : ident := 139%positive.
 Definition _main : ident := 241%positive.
-Definition _malloc : ident := 108%positive.
+Definition _malloc : ident := 112%positive.
 Definition _moveToFirstRecord : ident := 152%positive.
 Definition _moveToRecord : ident := 141%positive.
 Definition _newChildIdxAllEntries : ident := 183%positive.
@@ -235,7 +235,7 @@ Definition _relation : ident := 49%positive.
 Definition _rightNode : ident := 221%positive.
 Definition _rightSibling : ident := 215%positive.
 Definition _root : ident := 36%positive.
-Definition _stderr : ident := 111%positive.
+Definition _stderr : ident := 110%positive.
 Definition _success : ident := 133%positive.
 Definition _targetIdx : ident := 179%positive.
 Definition _targetIdx__1 : ident := 189%positive.
@@ -750,7 +750,7 @@ Definition f_RL_NewRelation := {|
     (Ssequence
       (Ssequence
         (Scall (Some _t'2)
-          (Evar _malloc (Tfunction (Tcons tuint Tnil) (tptr tvoid)
+          (Evar _malloc (Tfunction (Tcons tulong Tnil) (tptr tvoid)
                           cc_default))
           ((Esizeof (Tstruct _Relation noattr) tulong) :: nil))
         (Sset _pNewRelation
@@ -825,7 +825,7 @@ Definition f_RL_DeleteRelation := {|
                              tvoid cc_default))
       ((Evar ___stringlit_2 (tarray tschar 17)) ::
        (Evar ___stringlit_1 (tarray tschar 15)) ::
-       (Econst_int (Int.repr 162) tint) ::
+       (Econst_int (Int.repr 160) tint) ::
        (Evar ___func__ (tarray tschar 18)) :: nil)))
   (Ssequence
     (Sset _t'1
@@ -879,12 +879,12 @@ Definition f_RL_NewCursor := {|
                              tvoid cc_default))
       ((Evar ___stringlit_2 (tarray tschar 17)) ::
        (Evar ___stringlit_1 (tarray tschar 15)) ::
-       (Econst_int (Int.repr 170) tint) ::
+       (Econst_int (Int.repr 168) tint) ::
        (Evar ___func____1 (tarray tschar 13)) :: nil)))
   (Ssequence
     (Ssequence
       (Scall (Some _t'1)
-        (Evar _malloc (Tfunction (Tcons tuint Tnil) (tptr tvoid) cc_default))
+        (Evar _malloc (Tfunction (Tcons tulong Tnil) (tptr tvoid) cc_default))
         ((Esizeof (Tstruct _Cursor noattr) tulong) :: nil))
       (Sset _cursor
         (Ecast (Etempvar _t'1 (tptr tvoid)) (tptr (Tstruct _Cursor noattr)))))
@@ -1013,7 +1013,7 @@ Definition f_RL_CursorIsValid := {|
                              tvoid cc_default))
       ((Evar ___stringlit_3 (tarray tschar 15)) ::
        (Evar ___stringlit_1 (tarray tschar 15)) ::
-       (Econst_int (Int.repr 195) tint) ::
+       (Econst_int (Int.repr 193) tint) ::
        (Evar ___func____2 (tarray tschar 17)) :: nil)))
   (Ssequence
     (Sset _t'1
@@ -1059,7 +1059,7 @@ Definition f_RL_PutRecord := {|
                              tvoid cc_default))
       ((Evar ___stringlit_3 (tarray tschar 15)) ::
        (Evar ___stringlit_1 (tarray tschar 15)) ::
-       (Econst_int (Int.repr 202) tint) ::
+       (Econst_int (Int.repr 200) tint) ::
        (Evar ___func____3 (tarray tschar 13)) :: nil)))
   (Ssequence
     (Sassign
@@ -1164,7 +1164,7 @@ Definition f_RL_MoveToRecord := {|
                              tvoid cc_default))
       ((Evar ___stringlit_3 (tarray tschar 15)) ::
        (Evar ___stringlit_1 (tarray tschar 15)) ::
-       (Econst_int (Int.repr 220) tint) ::
+       (Econst_int (Int.repr 218) tint) ::
        (Evar ___func____4 (tarray tschar 16)) :: nil)))
   (Ssequence
     (Ssequence
@@ -1332,7 +1332,7 @@ Definition f_RL_GetRecord := {|
                                tvoid cc_default))
         ((Evar ___stringlit_4 (tarray tschar 16)) ::
          (Evar ___stringlit_1 (tarray tschar 15)) ::
-         (Econst_int (Int.repr 235) tint) ::
+         (Econst_int (Int.repr 233) tint) ::
          (Evar ___func____5 (tarray tschar 13)) :: nil))))
   (Ssequence
     (Sset _t'1
@@ -1400,7 +1400,7 @@ Definition f_RL_DeleteRecord := {|
                              tvoid cc_default))
       ((Evar ___stringlit_3 (tarray tschar 15)) ::
        (Evar ___stringlit_1 (tarray tschar 15)) ::
-       (Econst_int (Int.repr 243) tint) ::
+       (Econst_int (Int.repr 241) tint) ::
        (Evar ___func____6 (tarray tschar 16)) :: nil)))
   (Ssequence
     (Sassign
@@ -1537,7 +1537,7 @@ Definition f_RL_MoveToFirstRecord := {|
                              tvoid cc_default))
       ((Evar ___stringlit_5 (tarray tschar 9)) ::
        (Evar ___stringlit_1 (tarray tschar 15)) ::
-       (Econst_int (Int.repr 266) tint) ::
+       (Econst_int (Int.repr 264) tint) ::
        (Evar ___func____7 (tarray tschar 21)) :: nil)))
   (Ssequence
     (Ssequence
@@ -1633,7 +1633,7 @@ Definition f_RL_MoveToNext := {|
                                  tvoid cc_default))
           ((Evar ___stringlit_6 (tarray tschar 17)) ::
            (Evar ___stringlit_1 (tarray tschar 15)) ::
-           (Econst_int (Int.repr 281) tint) ::
+           (Econst_int (Int.repr 279) tint) ::
            (Evar ___func____8 (tarray tschar 14)) :: nil)))
       (Ssequence
         (Ssequence
@@ -1652,7 +1652,7 @@ Definition f_RL_MoveToNext := {|
                                      tvoid cc_default))
               ((Evar ___stringlit_7 (tarray tschar 18)) ::
                (Evar ___stringlit_1 (tarray tschar 15)) ::
-               (Econst_int (Int.repr 282) tint) ::
+               (Econst_int (Int.repr 280) tint) ::
                (Evar ___func____8 (tarray tschar 14)) :: nil))))
         (Ssequence
           (Ssequence
@@ -2021,7 +2021,7 @@ Definition f_RL_MoveToPrevious := {|
                                  tvoid cc_default))
           ((Evar ___stringlit_6 (tarray tschar 17)) ::
            (Evar ___stringlit_1 (tarray tschar 15)) ::
-           (Econst_int (Int.repr 331) tint) ::
+           (Econst_int (Int.repr 329) tint) ::
            (Evar ___func____9 (tarray tschar 18)) :: nil)))
       (Ssequence
         (Ssequence
@@ -2040,7 +2040,7 @@ Definition f_RL_MoveToPrevious := {|
                                      tvoid cc_default))
               ((Evar ___stringlit_7 (tarray tschar 18)) ::
                (Evar ___stringlit_1 (tarray tschar 15)) ::
-               (Econst_int (Int.repr 332) tint) ::
+               (Econst_int (Int.repr 330) tint) ::
                (Evar ___func____9 (tarray tschar 18)) :: nil))))
         (Ssequence
           (Ssequence
@@ -2396,7 +2396,7 @@ Definition f_RL_GetKey := {|
                              tvoid cc_default))
       ((Evar ___stringlit_3 (tarray tschar 15)) ::
        (Evar ___stringlit_1 (tarray tschar 15)) ::
-       (Econst_int (Int.repr 378) tint) ::
+       (Econst_int (Int.repr 376) tint) ::
        (Evar ___func____10 (tarray tschar 10)) :: nil)))
   (Ssequence
     (Ssequence
@@ -2414,7 +2414,7 @@ Definition f_RL_GetKey := {|
                                  tvoid cc_default))
           ((Evar ___stringlit_4 (tarray tschar 16)) ::
            (Evar ___stringlit_1 (tarray tschar 15)) ::
-           (Econst_int (Int.repr 379) tint) ::
+           (Econst_int (Int.repr 377) tint) ::
            (Evar ___func____10 (tarray tschar 10)) :: nil))))
     (Ssequence
       (Sset _t'1
@@ -2475,7 +2475,7 @@ Definition f_RL_IsEmpty := {|
                              tvoid cc_default))
       ((Evar ___stringlit_6 (tarray tschar 17)) ::
        (Evar ___stringlit_1 (tarray tschar 15)) ::
-       (Econst_int (Int.repr 387) tint) ::
+       (Econst_int (Int.repr 385) tint) ::
        (Evar ___func____11 (tarray tschar 11)) :: nil)))
   (Ssequence
     (Ssequence
@@ -2547,7 +2547,7 @@ Definition f_RL_NumRecords := {|
                              tvoid cc_default))
       ((Evar ___stringlit_6 (tarray tschar 17)) ::
        (Evar ___stringlit_1 (tarray tschar 15)) ::
-       (Econst_int (Int.repr 397) tint) ::
+       (Econst_int (Int.repr 395) tint) ::
        (Evar ___func____12 (tarray tschar 14)) :: nil)))
   (Ssequence
     (Sset _t'1
@@ -2597,7 +2597,7 @@ Definition f_RL_PrintTree := {|
                              tvoid cc_default))
       ((Evar ___stringlit_2 (tarray tschar 17)) ::
        (Evar ___stringlit_1 (tarray tschar 15)) ::
-       (Econst_int (Int.repr 405) tint) ::
+       (Econst_int (Int.repr 403) tint) ::
        (Evar ___func____13 (tarray tschar 13)) :: nil)))
   (Ssequence
     (Ssequence
@@ -2619,7 +2619,7 @@ Definition f_RL_PrintTree := {|
                                  tvoid cc_default))
           ((Evar ___stringlit_8 (tarray tschar 23)) ::
            (Evar ___stringlit_1 (tarray tschar 15)) ::
-           (Econst_int (Int.repr 406) tint) ::
+           (Econst_int (Int.repr 404) tint) ::
            (Evar ___func____13 (tarray tschar 13)) :: nil))))
     (Ssequence
       (Sset _t'1
@@ -2646,7 +2646,7 @@ Definition f_createNewNode := {|
 (Ssequence
   (Ssequence
     (Scall (Some _t'1)
-      (Evar _malloc (Tfunction (Tcons tuint Tnil) (tptr tvoid) cc_default))
+      (Evar _malloc (Tfunction (Tcons tulong Tnil) (tptr tvoid) cc_default))
       ((Esizeof (Tstruct _BtNode noattr) tulong) :: nil))
     (Sset _newNode
       (Ecast (Etempvar _t'1 (tptr tvoid)) (tptr (Tstruct _BtNode noattr)))))
@@ -2762,7 +2762,7 @@ Definition f_insertKeyRecord := {|
                              tvoid cc_default))
       ((Evar ___stringlit_9 (tarray tschar 13)) ::
        (Evar ___stringlit_1 (tarray tschar 15)) ::
-       (Econst_int (Int.repr 445) tint) ::
+       (Econst_int (Int.repr 443) tint) ::
        (Evar ___func____14 (tarray tschar 16)) :: nil)))
   (Ssequence
     (Sifthenelse (Ebinop One
@@ -2777,7 +2777,7 @@ Definition f_insertKeyRecord := {|
                                tvoid cc_default))
         ((Evar ___stringlit_3 (tarray tschar 15)) ::
          (Evar ___stringlit_1 (tarray tschar 15)) ::
-         (Econst_int (Int.repr 446) tint) ::
+         (Econst_int (Int.repr 444) tint) ::
          (Evar ___func____14 (tarray tschar 16)) :: nil)))
     (Ssequence
       (Sifthenelse (Ebinop One
@@ -2793,7 +2793,7 @@ Definition f_insertKeyRecord := {|
                                  tvoid cc_default))
           ((Evar ___stringlit_10 (tarray tschar 26)) ::
            (Evar ___stringlit_1 (tarray tschar 15)) ::
-           (Econst_int (Int.repr 448) tint) ::
+           (Econst_int (Int.repr 446) tint) ::
            (Evar ___func____14 (tarray tschar 16)) :: nil)))
       (Ssequence
         (Sifthenelse (Ebinop Olt (Etempvar _level tint)
@@ -2808,7 +2808,7 @@ Definition f_insertKeyRecord := {|
                                    cc_default))
             ((Evar ___stringlit_11 (tarray tschar 23)) ::
              (Evar ___stringlit_1 (tarray tschar 15)) ::
-             (Econst_int (Int.repr 449) tint) ::
+             (Econst_int (Int.repr 447) tint) ::
              (Evar ___func____14 (tarray tschar 16)) :: nil)))
         (Ssequence
           (Scall None
@@ -3374,7 +3374,7 @@ Definition f_insertKeyRecord := {|
                                                         tvoid cc_default))
                                                       ((Evar ___stringlit_12 (tarray tschar 8)) ::
                                                        (Evar ___stringlit_1 (tarray tschar 15)) ::
-                                                       (Econst_int (Int.repr 581) tint) ::
+                                                       (Econst_int (Int.repr 579) tint) ::
                                                        (Evar ___func____14 (tarray tschar 16)) ::
                                                        nil)))
                                                   (Ssequence
@@ -3603,7 +3603,7 @@ Definition f_insertKeyRecord := {|
                                                                     cc_default))
                                                                     ((Evar ___stringlit_13 (tarray tschar 12)) ::
                                                                     (Evar ___stringlit_1 (tarray tschar 15)) ::
-                                                                    (Econst_int (Int.repr 615) tint) ::
+                                                                    (Econst_int (Int.repr 613) tint) ::
                                                                     (Evar ___func____14 (tarray tschar 16)) ::
                                                                     nil)))
                                                                     (Ssequence
@@ -4525,7 +4525,7 @@ Definition f_insertKeyRecord := {|
                                                                     cc_default))
                                               ((Evar ___stringlit_12 (tarray tschar 8)) ::
                                                (Evar ___stringlit_1 (tarray tschar 15)) ::
-                                               (Econst_int (Int.repr 762) tint) ::
+                                               (Econst_int (Int.repr 760) tint) ::
                                                (Evar ___func____14 (tarray tschar 16)) ::
                                                nil)))
                                           (Ssequence
@@ -4676,7 +4676,7 @@ Definition f_insertKeyRecord := {|
                                                                     cc_default))
                                                                     ((Evar ___stringlit_13 (tarray tschar 12)) ::
                                                                     (Evar ___stringlit_1 (tarray tschar 15)) ::
-                                                                    (Econst_int (Int.repr 782) tint) ::
+                                                                    (Econst_int (Int.repr 780) tint) ::
                                                                     (Evar ___func____14 (tarray tschar 16)) ::
                                                                     nil)))
                                                                 (Ssequence
@@ -5059,7 +5059,7 @@ Definition f_deleteKeyRecord := {|
                              tvoid cc_default))
       ((Evar ___stringlit_9 (tarray tschar 13)) ::
        (Evar ___stringlit_1 (tarray tschar 15)) ::
-       (Econst_int (Int.repr 858) tint) ::
+       (Econst_int (Int.repr 856) tint) ::
        (Evar ___func____15 (tarray tschar 16)) :: nil)))
   (Ssequence
     (Sifthenelse (Ebinop One
@@ -5074,7 +5074,7 @@ Definition f_deleteKeyRecord := {|
                                tvoid cc_default))
         ((Evar ___stringlit_3 (tarray tschar 15)) ::
          (Evar ___stringlit_1 (tarray tschar 15)) ::
-         (Econst_int (Int.repr 859) tint) ::
+         (Econst_int (Int.repr 857) tint) ::
          (Evar ___func____15 (tarray tschar 16)) :: nil)))
     (Ssequence
       (Sifthenelse (Ebinop One
@@ -5090,7 +5090,7 @@ Definition f_deleteKeyRecord := {|
                                  tvoid cc_default))
           ((Evar ___stringlit_14 (tarray tschar 26)) ::
            (Evar ___stringlit_1 (tarray tschar 15)) ::
-           (Econst_int (Int.repr 861) tint) ::
+           (Econst_int (Int.repr 859) tint) ::
            (Evar ___func____15 (tarray tschar 16)) :: nil)))
       (Ssequence
         (Scall None
@@ -5370,7 +5370,7 @@ Definition f_handleDeleteOfEntry := {|
                                      tvoid cc_default))
               ((Evar ___stringlit_9 (tarray tschar 13)) ::
                (Evar ___stringlit_1 (tarray tschar 15)) ::
-               (Econst_int (Int.repr 923) tint) ::
+               (Econst_int (Int.repr 921) tint) ::
                (Evar ___func____16 (tarray tschar 20)) :: nil)))
           (Ssequence
             (Sifthenelse (Ebinop One
@@ -5387,7 +5387,7 @@ Definition f_handleDeleteOfEntry := {|
                                        tvoid cc_default))
                 ((Evar ___stringlit_3 (tarray tschar 15)) ::
                  (Evar ___stringlit_1 (tarray tschar 15)) ::
-                 (Econst_int (Int.repr 924) tint) ::
+                 (Econst_int (Int.repr 922) tint) ::
                  (Evar ___func____16 (tarray tschar 20)) :: nil)))
             (Ssequence
               (Sifthenelse (Ebinop One
@@ -5404,7 +5404,7 @@ Definition f_handleDeleteOfEntry := {|
                                          tvoid cc_default))
                   ((Evar ___stringlit_14 (tarray tschar 26)) ::
                    (Evar ___stringlit_1 (tarray tschar 15)) ::
-                   (Econst_int (Int.repr 925) tint) ::
+                   (Econst_int (Int.repr 923) tint) ::
                    (Evar ___func____16 (tarray tschar 20)) :: nil)))
               (Ssequence
                 (Ssequence
@@ -5499,7 +5499,7 @@ Definition f_handleDeleteOfEntry := {|
                                              tvoid cc_default))
                       ((Evar ___stringlit_15 (tarray tschar 14)) ::
                        (Evar ___stringlit_1 (tarray tschar 15)) ::
-                       (Econst_int (Int.repr 938) tint) ::
+                       (Econst_int (Int.repr 936) tint) ::
                        (Evar ___func____16 (tarray tschar 20)) :: nil)))
                   (Ssequence
                     (Ssequence
@@ -5741,7 +5741,7 @@ Definition f_handleDeleteOfEntry := {|
                                                                cc_default))
                                         ((Evar ___stringlit_15 (tarray tschar 14)) ::
                                          (Evar ___stringlit_1 (tarray tschar 15)) ::
-                                         (Econst_int (Int.repr 986) tint) ::
+                                         (Econst_int (Int.repr 984) tint) ::
                                          (Evar ___func____16 (tarray tschar 20)) ::
                                          nil)))
                                     Sskip))
@@ -5937,7 +5937,7 @@ Definition f_handleDeleteOfEntry := {|
                                                                  cc_default))
                                           ((Evar ___stringlit_16 (tarray tschar 44)) ::
                                            (Evar ___stringlit_1 (tarray tschar 15)) ::
-                                           (Econst_int (Int.repr 1014) tint) ::
+                                           (Econst_int (Int.repr 1012) tint) ::
                                            (Evar ___func____16 (tarray tschar 20)) ::
                                            nil))))
                                     (Ssequence
@@ -6049,7 +6049,7 @@ Definition f_handleDeleteOfEntry := {|
                                                   cc_default))
                                                 ((Evar ___stringlit_15 (tarray tschar 14)) ::
                                                  (Evar ___stringlit_1 (tarray tschar 15)) ::
-                                                 (Econst_int (Int.repr 1039) tint) ::
+                                                 (Econst_int (Int.repr 1037) tint) ::
                                                  (Evar ___func____16 (tarray tschar 20)) ::
                                                  nil)))
                                             (Ssequence
@@ -6213,7 +6213,7 @@ Definition f_redistributeOrMerge := {|
                                tvoid cc_default))
         ((Evar ___stringlit_17 (tarray tschar 17)) ::
          (Evar ___stringlit_1 (tarray tschar 15)) ::
-         (Econst_int (Int.repr 1073) tint) ::
+         (Econst_int (Int.repr 1071) tint) ::
          (Evar ___func____17 (tarray tschar 20)) :: nil)))
     (Ssequence
       (Sifthenelse (Ebinop One
@@ -6229,7 +6229,7 @@ Definition f_redistributeOrMerge := {|
                                  tvoid cc_default))
           ((Evar ___stringlit_18 (tarray tschar 18)) ::
            (Evar ___stringlit_1 (tarray tschar 15)) ::
-           (Econst_int (Int.repr 1074) tint) ::
+           (Econst_int (Int.repr 1072) tint) ::
            (Evar ___func____17 (tarray tschar 20)) :: nil)))
       (Ssequence
         (Sifthenelse (Ebinop Oge (Etempvar _totalKeys tint)
@@ -6245,7 +6245,7 @@ Definition f_redistributeOrMerge := {|
                                    cc_default))
             ((Evar ___stringlit_19 (tarray tschar 24)) ::
              (Evar ___stringlit_1 (tarray tschar 15)) ::
-             (Econst_int (Int.repr 1076) tint) ::
+             (Econst_int (Int.repr 1074) tint) ::
              (Evar ___func____17 (tarray tschar 20)) :: nil)))
         (Sifthenelse (Ebinop Oeq (Etempvar _isLeaf tint)
                        (Econst_int (Int.repr 0) tint) tint)
@@ -7207,7 +7207,7 @@ Definition f_findChildIndex := {|
                                tvoid cc_default))
         ((Evar ___stringlit_20 (tarray tschar 16)) ::
          (Evar ___stringlit_1 (tarray tschar 15)) ::
-         (Econst_int (Int.repr 1215) tint) ::
+         (Econst_int (Int.repr 1213) tint) ::
          (Evar ___func____18 (tarray tschar 15)) :: nil)))
     (Ssequence
       (Sifthenelse (Ebinop Ogt (Etempvar _length tint)
@@ -7221,7 +7221,7 @@ Definition f_findChildIndex := {|
                                  tvoid cc_default))
           ((Evar ___stringlit_21 (tarray tschar 11)) ::
            (Evar ___stringlit_1 (tarray tschar 15)) ::
-           (Econst_int (Int.repr 1216) tint) ::
+           (Econst_int (Int.repr 1214) tint) ::
            (Evar ___func____18 (tarray tschar 15)) :: nil)))
       (Ssequence
         (Ssequence
@@ -7349,7 +7349,7 @@ Definition f_moveToRecord := {|
                                          tvoid cc_default))
                   ((Evar ___stringlit_22 (tarray tschar 11)) ::
                    (Evar ___stringlit_1 (tarray tschar 15)) ::
-                   (Econst_int (Int.repr 1242) tint) ::
+                   (Econst_int (Int.repr 1240) tint) ::
                    (Evar ___func____19 (tarray tschar 13)) :: nil)))
               (Ssequence
                 (Sassign
@@ -7616,7 +7616,7 @@ Definition f_moveToFirstRecord := {|
                              tvoid cc_default))
       ((Evar ___stringlit_9 (tarray tschar 13)) ::
        (Evar ___stringlit_1 (tarray tschar 15)) ::
-       (Econst_int (Int.repr 1296) tint) ::
+       (Econst_int (Int.repr 1294) tint) ::
        (Evar ___func____20 (tarray tschar 18)) :: nil)))
   (Ssequence
     (Sifthenelse (Ebinop One
@@ -7631,7 +7631,7 @@ Definition f_moveToFirstRecord := {|
                                tvoid cc_default))
         ((Evar ___stringlit_3 (tarray tschar 15)) ::
          (Evar ___stringlit_1 (tarray tschar 15)) ::
-         (Econst_int (Int.repr 1297) tint) ::
+         (Econst_int (Int.repr 1295) tint) ::
          (Evar ___func____20 (tarray tschar 18)) :: nil)))
     (Ssequence
       (Sifthenelse (Ebinop Oge (Etempvar _level tint)
@@ -7645,7 +7645,7 @@ Definition f_moveToFirstRecord := {|
                                  tvoid cc_default))
           ((Evar ___stringlit_23 (tarray tschar 11)) ::
            (Evar ___stringlit_1 (tarray tschar 15)) ::
-           (Econst_int (Int.repr 1298) tint) ::
+           (Econst_int (Int.repr 1296) tint) ::
            (Evar ___func____20 (tarray tschar 18)) :: nil)))
       (Ssequence
         (Sassign
@@ -8001,7 +8001,7 @@ Definition f_ASSERT_NODE_INVARIANT := {|
                                    cc_default))
             ((Evar ___stringlit_24 (tarray tschar 28)) ::
              (Evar ___stringlit_1 (tarray tschar 15)) ::
-             (Econst_int (Int.repr 1356) tint) ::
+             (Econst_int (Int.repr 1354) tint) ::
              (Evar ___func____21 (tarray tschar 22)) :: nil))))
       Sskip))
   (Ssequence
@@ -8020,7 +8020,7 @@ Definition f_ASSERT_NODE_INVARIANT := {|
                                tvoid cc_default))
         ((Evar ___stringlit_25 (tarray tschar 24)) ::
          (Evar ___stringlit_1 (tarray tschar 15)) ::
-         (Econst_int (Int.repr 1358) tint) ::
+         (Econst_int (Int.repr 1356) tint) ::
          (Evar ___func____21 (tarray tschar 22)) :: nil)))))
 |}.
 
@@ -8546,9 +8546,6 @@ Definition global_definitions : list (ident * globdef fundef type) :=
                      {|cc_vararg:=true; cc_unproto:=false; cc_structret:=false|}))
      (Tcons tint Tnil) tvoid
      {|cc_vararg:=true; cc_unproto:=false; cc_structret:=false|})) ::
- (_malloc,
-   Gfun(External EF_malloc (Tcons tuint Tnil) (tptr tvoid) cc_default)) ::
- (_free, Gfun(External EF_free (Tcons (tptr tvoid) Tnil) tvoid cc_default)) ::
  (___assert_fail,
    Gfun(External (EF_external "__assert_fail"
                    (mksignature
@@ -8556,7 +8553,9 @@ Definition global_definitions : list (ident * globdef fundef type) :=
                      None cc_default))
      (Tcons (tptr tschar)
        (Tcons (tptr tschar) (Tcons tuint (Tcons (tptr tschar) Tnil)))) tvoid
-     cc_default)) :: (_stderr, Gvar v_stderr) ::
+     cc_default)) ::
+ (_free, Gfun(External EF_free (Tcons (tptr tvoid) Tnil) tvoid cc_default)) ::
+ (_stderr, Gvar v_stderr) ::
  (_fprintf,
    Gfun(External (EF_external "fprintf"
                    (mksignature (AST.Tlong :: AST.Tlong :: nil)
@@ -8564,6 +8563,8 @@ Definition global_definitions : list (ident * globdef fundef type) :=
                      {|cc_vararg:=true; cc_unproto:=false; cc_structret:=false|}))
      (Tcons (tptr (Tstruct __IO_FILE noattr)) (Tcons (tptr tschar) Tnil))
      tint {|cc_vararg:=true; cc_unproto:=false; cc_structret:=false|})) ::
+ (_malloc,
+   Gfun(External EF_malloc (Tcons tulong Tnil) (tptr tvoid) cc_default)) ::
  (_RL_NewRelation, Gfun(Internal f_RL_NewRelation)) ::
  (___func__, Gvar v___func__) ::
  (_RL_DeleteRelation, Gfun(Internal f_RL_DeleteRelation)) ::
@@ -8619,8 +8620,8 @@ Definition public_idents : list ident :=
  _RL_MoveToPrevious :: _RL_MoveToNext :: _RL_MoveToFirstRecord ::
  _RL_DeleteRecord :: _RL_GetRecord :: _RL_MoveToRecord :: _RL_PutRecord ::
  _RL_CursorIsValid :: _RL_FreeCursor :: _RL_NewCursor ::
- _RL_DeleteRelation :: _RL_NewRelation :: _fprintf :: _stderr ::
- ___assert_fail :: _free :: _malloc :: ___builtin_debug :: ___builtin_nop ::
+ _RL_DeleteRelation :: _RL_NewRelation :: _malloc :: _fprintf :: _stderr ::
+ _free :: ___assert_fail :: ___builtin_debug :: ___builtin_nop ::
  ___builtin_write32_reversed :: ___builtin_write16_reversed ::
  ___builtin_read32_reversed :: ___builtin_read16_reversed ::
  ___builtin_fnmsub :: ___builtin_fnmadd :: ___builtin_fmsub ::
