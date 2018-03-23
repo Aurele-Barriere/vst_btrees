@@ -10,6 +10,7 @@ Require Import VST.msl.wand_frame.
 Require Import VST.msl.iter_sepcon.
 Require Import VST.floyd.reassoc_seq.
 Require Import VST.floyd.field_at_wand.
+Require Import FunInd.
 
 (**
     BTREES FORMAL MODEL
@@ -56,6 +57,39 @@ Fixpoint max_nat (m : nat) (n : nat) : nat :=
              end)
   end.
 
+Lemma max_0: forall a, max_nat a 0 = a.
+Proof. induction a. auto. simpl. auto. Qed.
+
+Theorem le_max_split_l: forall n a b,
+    (n < a)%nat -> (n< max_nat a b)%nat.
+Proof.
+  intros.
+  generalize dependent n.
+  generalize dependent b0.
+  generalize dependent a.
+  induction a; intros.
+  - inversion H.
+  - destruct b0.
+    + rewrite max_0. auto.
+    + simpl. destruct n. omega.
+      assert (n<a)%nat by omega. apply IHa with (b0:=b0) in H0. omega.
+Qed.      
+
+Theorem max_flip: forall a b, max_nat a b = max_nat b a.
+Proof.
+  induction a; intros.
+  - simpl. rewrite max_0. auto.
+  - simpl. destruct b0.
+    + simpl. auto.
+    + simpl. rewrite IHa. auto.
+Qed.    
+
+Theorem le_max_split_r: forall n a b,
+    (n < b)%nat -> (n< max_nat a b)%nat.
+Proof.
+  intros. rewrite max_flip. apply le_max_split_l. auto.
+Qed.
+  
 Definition max_index (i1:index) (i2:index): index :=
   match i1 with
   | im => i2
@@ -149,6 +183,19 @@ Fixpoint nth_node_le {X:Type} (i:nat) (le:listentry X): option (node X) :=
             end
   end.
 
+Lemma nth_node_le_decrease: forall X (le:listentry X) (n:node X) i,
+    nth_node_le i le = Some n ->
+    (node_depth n < listentry_depth le)%nat.
+Proof.
+  induction le; intros.
+  - unfold nth_node_le in H.
+    destruct i; inversion H.
+  - simpl.
+    destruct i.
+    + apply le_max_split_l. simpl in H. destruct e; try inv H. simpl. auto.
+    + apply le_max_split_r. apply IHle with (i:=i). simpl in H. auto.
+Qed.
+      
 Definition nth_node {X:Type} (i:index) (n:node X): option (node X) :=
   match n with btnode ptr0 le _ _ =>
                match i with
@@ -156,6 +203,17 @@ Definition nth_node {X:Type} (i:index) (n:node X): option (node X) :=
                | ip na => nth_node_le na le
                end
   end.
+
+Lemma nth_node_decrease: forall X (n:node X) (n':node X) i,
+    nth_node i n = Some n' ->
+    (node_depth n' < node_depth n)%nat.
+Proof.
+  intros. unfold nth_node in H.
+  destruct n. destruct i.
+  - simpl. destruct o. inversion H. subst.
+    apply le_max_split_r. auto. inversion H.
+  - simpl. apply le_max_split_l. apply nth_node_le_decrease with (i:=n). auto.
+Qed.
 
 Definition move_to_next {X:Type} (c:cursor X): cursor X * bool :=
   match (move_to_next_partial c) with
@@ -207,6 +265,53 @@ Definition getKey {X:Type} (c:cursor X): option key :=
       end
     end
   end.
+
+Fixpoint findChildIndex' {X:Type} (le:listentry X) (key:key) (i:index): index :=
+  match le with
+  | nil => i
+  | cons e le' =>
+    match e with
+    | keyval k v x =>
+      match (key <=? k) with
+      | true => i
+      | false => findChildIndex' le' key (next_index i)
+      end
+    | keychild k c =>
+      match (key <=? k) with
+      | true => i
+      | false => findChildIndex' le' key (next_index i)
+      end
+    end
+  end.
+
+Definition findChildIndex {X:Type} (le:listentry X) (key:key): index :=
+  findChildIndex' le key im.
+
+(* n should be the current node pointed to, so if c=(m,i)::c', it should be m(i) *)
+Function moveToRecord (X:Type) (c:cursor X) (key:key) (n:node X) {measure node_depth n}: cursor X * bool :=
+  match n with btnode ptr0 le isLeaf x =>
+               match isLeaf with
+               | true =>
+                 match findChildIndex le key with
+                 | im => ((n,ip 0)::c, false)
+                 | ip ii =>
+                   match getKey ((n,ip ii)::c) with
+                   | None => (c,false)  (* shouldnt happen, findChildIndex return valid indexes *)
+                   | Some k => ((n,ip ii)::c, key =? k)
+                   end
+                 end
+               | false =>
+                 match nth_node (findChildIndex le key) n with
+                 | None => (c,false)    (* should not happen: we should have ptr0 and findChildIndex should not overflow *)
+                 | Some n' =>
+                   moveToRecord X ((n,findChildIndex le key)::c) key n'
+                 end
+               end
+  end.
+Proof.
+  intros.
+  apply nth_node_decrease with (i:= findChildIndex le key0). auto.
+Qed.
 
 (**
     REPRESENTATIONS IN SEPARATION LOGIC
