@@ -288,7 +288,7 @@ Definition findChildIndex {X:Type} (le:listentry X) (key:key): index :=
   findChildIndex' le key im.
 
 (* n should be the current node pointed to, so if c=(m,i)::c', it should be m(i) *)
-Function moveToRecord (X:Type) (c:cursor X) (key:key) (n:node X) {measure node_depth n}: cursor X * bool :=
+Function moveToRecord {X:Type} (c:cursor X) (key:key) (n:node X) {measure node_depth n}: cursor X * bool :=
   match n with btnode ptr0 le isLeaf x =>
                match isLeaf with
                | true =>
@@ -304,7 +304,7 @@ Function moveToRecord (X:Type) (c:cursor X) (key:key) (n:node X) {measure node_d
                  match nth_node (findChildIndex le key) n with
                  | None => (c,false)    (* should not happen: we should have ptr0 and findChildIndex should not overflow *)
                  | Some n' =>
-                   moveToRecord X ((n,findChildIndex le key)::c) key n'
+                   moveToRecord ((n,findChildIndex le key)::c) key n'
                  end
                end
   end.
@@ -312,6 +312,97 @@ Proof.
   intros.
   apply nth_node_decrease with (i:= findChildIndex le key0). auto.
 Qed.
+
+Fixpoint numKeys_le {X:Type} (le:listentry X) : nat :=
+  match le with
+  | nil => 0%nat
+  | cons e le' => S (numKeys_le le')
+  end.
+
+Definition numKeys {X:Type} (n:node X) : nat :=
+  match n with btnode ptr0 le _ x => numKeys_le le end.
+
+Fixpoint update_le_nth_child {X:Type} (i:nat) (le:listentry X) (n:node X) : listentry X :=
+  match le with
+  | nil => nil X
+  | cons e le' => match i with
+                  | O => match e with
+                         | keychild k c => cons X (keychild X k n) le'
+                         | keyval k v x => cons X (keychild X k n) le' (* shouldnt happen *)
+                         end
+                  | S i' => update_le_nth_child i' le' n
+                  end
+  end.  
+
+Fixpoint update_le_nth_val {X:Type} (i:nat) (le:listentry X) (newv:V) (newx:X) : listentry X :=
+  match le with
+  | nil => nil X
+  | cons e le' => match i with
+                  | O => match e with
+                         | keychild k c => cons X (keyval X k newv newx) le' (* shouldnt happen *)
+                         | keyval k v x => cons X (keyval X k newv newx) le'
+                         end
+                  | S i' => update_le_nth_val i' le' newv newx
+                  end
+  end.
+
+Definition update_node_nth_child {X:Type} (i:index) (oldn:node X) (n:node X) : node X :=
+  match oldn with btnode ptr0 le isLeaf x =>
+  match i with
+  | im => btnode X (Some n) le isLeaf x
+  | ip ii => btnode X ptr0 (update_le_nth_child ii le n) isLeaf x
+  end
+  end.
+
+Fixpoint update_cursor {X:Type} (c:cursor X) (n:node X) : cursor X :=
+  match c with
+  | [] => []
+  | (oldn,i)::c' =>
+    let newn := update_node_nth_child i oldn n in
+    (newn,i)::(update_cursor c' newn)
+  end.
+
+Fixpoint nth_key {X:Type} (i:nat) (le:listentry X): option key :=
+  match le with
+  | nil => None
+  | cons e le' => match i with
+                  | O => match e with
+                         | keychild k _ => Some k
+                         | keyval k _ _ => Some k
+                         end
+                  | S i' => nth_key i' le'
+                  end
+  end.
+  
+(* c should not be complete, and points to n *)
+(* nEFC is newEntryFromChild pointer *)
+Fixpoint insertKeyRecord' {X:Type} (key:key) (value:V) (nEFC:X) (n:node X) (c:cursor X): node X * cursor X * bool :=
+  match n with btnode ptr0 le isLeaf x =>
+  match isLeaf with
+  | true =>
+    match le with
+    | nil =>               (* first key *)
+      let newn:= btnode X ptr0 (cons X (keyval X key value nEFC) (nil X)) isLeaf x in
+      (newn,update_cursor c newn,true)
+    | _ =>
+      match (findChildIndex le key) with
+      | im => (n,c,false) (* TODO: THIS IS NOT ADDRESSED IN THE C CODE!!! *)
+      | ip ii =>
+        match (nth_key ii le) with
+        | None => (n,c,false)   (* impossible, findChildIndex returns an index in range ? *)
+        | Some k =>
+          match (k =? key) with
+          | true =>             (* update *)
+            let newn:= btnode X ptr0 (update_le_nth_val ii le value nEFC) isLeaf x in
+            (newn,update_cursor c newn,true) (* I don't think we should use nEFC. wich val? *)
+          | false => (n,c,false)          (* new node, TODO *)
+          end
+        end
+      end
+    end
+  | false => (n,c,false) (* TODO *)
+  end
+  end.
 
 (**
     REPRESENTATIONS IN SEPARATION LOGIC
@@ -325,15 +416,6 @@ Definition tcursor:=      Tstruct _Cursor noattr.
 
 Definition value_rep (v:V) (p:val):= (* this should change if we change the type of Values? *)
   data_at Tsh tint (Vint (Int.repr v)) p.
-
-Fixpoint numKeys_le {X:Type} (le:listentry X) : nat :=
-  match le with
-  | nil => 0%nat
-  | cons e le' => S (numKeys_le le')
-  end.
-
-Definition numKeys {X:Type} (n:node X) : nat :=
-  match n with btnode ptr0 le _ x => numKeys_le le end.
 
 Definition isLeaf {X:Type} (n:node X) : bool :=
   match n with btnode ptr0 le b w => b end.
@@ -629,17 +711,9 @@ forward_if (PROP() LOCAL(temp _relation p) SEP(relation_rep r p)).
       forward.                  (* cursor->isValid=0 *)
       forward.                  (* cursor->level=0 *)
       autorewrite with norm. simpl.
-
-      Locate forward_for_simple_bound.
-      Locate forward_for_simple_bound'.
-      
-      (* | simple eapply semax_seq'; *)
-      (*     [forward_for_simple_bound' n Pre *)
-      (*     | cbv beta; simpl update_tycon; abbreviate_semax  ] *)
-      Definition n:=20.
       pose (n:=20).
       pose (Pre:=(EX i:Z,
-            PROP ()
+            PROP ((0 <= i)%Z; (i <= n)%Z)
             LOCAL(temp _cursor vret; temp _relation p)         
             SEP(malloc_token Tsh tcursor vret;
                 relation_rep r p;
@@ -651,6 +725,15 @@ forward_if (PROP() LOCAL(temp _relation p) SEP(relation_rep r p)).
                (Vint (Int.repr 0),
                (list_repeat (Z.to_nat i) (Vint(Int.repr 0)) ++  list_repeat (MaxTreeDepth - (Z.to_nat i)) Vundef,
                 (list_repeat (Z.to_nat i) nullval ++ list_repeat (MaxTreeDepth - (Z.to_nat i)) Vundef))))))) vret))%assert).
+      (* forward_loop Pre. *)
+
+
+
+
+      
+      (* | simple eapply semax_seq'; *)
+      (*     [forward_for_simple_bound' n Pre *)
+      (*     | cbv beta; simpl update_tycon; abbreviate_semax  ] *)
       
       simple eapply semax_seq'.
       { Locate semax_for_const_bound_const_init.
@@ -668,8 +751,12 @@ forward_if (PROP() LOCAL(temp _relation p) SEP(relation_rep r p)).
        [Vundef; Vundef; Vundef; Vundef; Vundef; Vundef; Vundef; Vundef; Vundef; Vundef; Vundef;
        Vundef; Vundef; Vundef; Vundef; Vundef; Vundef; Vundef; Vundef; Vundef])))))) vret;
      relation_rep r p))). fold Pre'.
-        try eapply (semax_for_const_bound_const_init n Pre) with (_i:=_i) (hi:=20) (Delta:=Delta).
+        (* forward_loop *)
+        match goal with
+        | |- semax _ ?P (Sfor (Sset _ ?E) _ ?C _) ?Q => 
+        try eapply (semax_for_const_bound_const_init n Pre) with (_i:=_i) (hi:=20) (Delta:=Delta) (body:=C) (Pre0:=P) end.
         (* this one fails but shouldn't ? *)
+        (* because of the cast to tulong *)
         admit.
       }
       {  cbv beta. simpl update_tycon. abbreviate_semax. forward. }
