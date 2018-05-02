@@ -1,0 +1,63 @@
+\documentclass{llncs2e/llncs}
+
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{listings}
+\usepackage{pgf,tikz}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{wrapfig}
+\usetikzlibrary{positioning}
+
+\begin{document}
+\setcounter{page}{0}
+\pagestyle{headings}
+\title{VST Verification of BTrees with Cursor}
+\titlerunning{VST Verification of BTrees}
+\author{Aur\`ele Barri\`ere}
+\authorrunning{Aur\`ele Barri\`ere}
+\date{June 18, 2018}
+\institute{\'Ecole Normale Sup\'erieure de Rennes, France\\
+\email{aurele.barriere@ens-rennes.fr}\\
+}
+\maketitle
+\hrulefill
+\begin{center}
+  \textbf{Supervisor: }\\
+  Andrew Appel
+  ~\\
+  Princeton University
+\end{center}
+\hrulefill
+\begin{center}
+  \textbf{March 1st, 2018 - June 29th, 2018}
+\end{center}
+\vfill
+\begin{abstract}
+  TODO:abstract
+\keywords{BTrees, Cursor, VST, Verification, Coq, C}
+\end{abstract}
+\vfill
+\newpage
+
+% macros
+\def\btree{BTree}
+\def\btrees{BTrees}
+\def\todo#1{{\color{red}#1}}
+
+\section{Introduction}
+\label{sec:intro}
+\input{introduction.tex}
+
+\section{Conclusion and Future Works}
+\label{sec:conclusion}
+\input{conclusion.tex}
+
+\newpage
+\pagenumbering{Roman}
+\nocite{*}
+\bibliographystyle{plain}
+\bibliography{../bib/btrees}
+
+\end{document}

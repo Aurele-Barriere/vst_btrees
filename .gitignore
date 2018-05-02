@@ -44,3 +44,7 @@ btrees/.depend
 btrees/.loadpath
 myprogs
 Thesis_Draft.pdf
+*.bbl
+*.blg
+*.log
+report/report.pdf
