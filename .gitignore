@@ -48,3 +48,8 @@ Thesis_Draft.pdf
 *.blg
 *.log
 report/report.pdf
+*.nav
+*.out
+*.toc
+*.snm
+presentation/pres.pdf

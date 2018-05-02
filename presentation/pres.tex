@@ -1,0 +1,68 @@
+\documentclass[page number]{beamer}
+\usetheme[sectionpage=none,numbering=fraction,progressbar=foot]{metropolis}
+
+\usepackage{pgf,tikz}
+\usetikzlibrary{arrows}
+\usetikzlibrary{positioning,shapes,fit}
+\usepackage{xcolor}
+\usepackage{amssymb}
+\usepackage{amsmath}
+
+\makeatletter
+\makeatother
+
+\setcounter{tocdepth}{1} % remove subsection from table of contents
+
+% colors
+\definecolor{mDarkRed}{HTML}{6F1616}
+\definecolor{mDarkGreen}{HTML}{106235}
+\definecolor{mTeal}{HTML}{112233}
+\definecolor{mBlack}{HTML}{000000}
+\setbeamercolor{normal text}{fg=mTeal}
+\setbeamercolor{alerted text}{fg=mDarkRed}
+\setbeamercolor{example text}{fg=mDarkGreen}
+\setbeamercolor{title separator}{fg=purple,bg=mBlack}
+
+\def\outline{
+  \begin{frame}[plain,noframenumbering]
+    \frametitle{Outline}
+    \tableofcontents[currentsection]
+  \end{frame}
+}
+
+
+\begin{document}
+\title[shorttitle]{VST Verification of BTrees with Cursors}
+
+\author[Aur\`ele Barri\`ere]{Aur\`ele Barri\`ere}
+
+\date{\textit{ENS Rennes}
+  \vfill
+  \textbf{March 1st, 2018 - June 29th, 2018}}
+
+\def\outline{
+  \begin{frame}[plain,noframenumbering]
+    \frametitle{Outline}
+    \tableofcontents[currentsection]
+  \end{frame}
+}
+
+\begin{frame}[plain,noframenumbering]
+  \vspace{-2cm}
+  \maketitle
+  \vspace{-4cm}
+\end{frame}
+
+%% \metroset{sectionpage=none}
+
+%% \metroset{sectionpage=progressbar}
+
+\begin{frame}{Frame title}
+  lorem ipsum
+\end{frame}
+
+\begin{frame}{Frame 2 title}
+  lorem ipsum
+\end{frame}
+
+\end{document}
