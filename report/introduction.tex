@@ -1,1 +1,39 @@
-\todo{...}
+% Main-Memory Database Systems
+  With memory sizes increasing and prices dropping, the assumption that most of the values of a database system must reside on disk no longer holds.
+  This resulted in the emergence of several \textit{Main Memory Database Systems} \todo{[cite Faerber et al]}, where most (or all) of the data is in the memory.
+  As a result, file I/O is no longer a bottleneck for such systems.\todo{(there's more than just avoiding i/o)}
+  Examples include MassTree, VoltDB, Hekaton, SAP HANA, MemSQL and others.\todo{(add citations)}.
+
+% MassTree
+  MassTree is an example of such Main-Memory Database System.
+  It stores values, indexed by keys, directly in the memory.
+  It uses a combination of the well-studied \todo{?} B+Trees and Tries data structures.
+  \todo{describe results and context}
+
+% DeepDB
+  We \todo{(we? deepdb?)} decided to implement and verify a high-performance Main-Memory Key-Value Store, inspired by MassTree.
+  Just like MassTree, our implementation should use B+Trees inside a Trie-like structure.
+  However, our B+Tree Implementation uses Cursors to reduce the complexity of some operations for partially-sorted data.
+
+% VST Verification
+  Formal verification of C programs has been the focus of many recent works.
+  In particular, CompCert\todo{citation} is a fully verified C compiler in Coq\todo{citation}, which formally defines C and assembly semantics and proves that the source and compiled programs have equivalent behaviours.
+  This allow for program verification at the source level, as the compiled program is guaranteed to run as specified by the source code.
+  Then, the Verified Software Toolchain (VST) \todo{citation} allows you to write specifications for C programs and formally verify in Coq that they are respected (using the same C semantics as CompCert).
+  \todo{more about VST}
+
+% Contribution
+  This paper focuses on the implementation, specification and verification of the B+Trees with Cursors Library. We first chose to consider a sequential implementation.
+  Ultimately, our data structure should allow a concurrent usage, but we believe that formal verification of a sequential program is a mandatory first step towards the verification of a concurrent one.\todo{badly put}
+  Given a formal specification of an abstract key-value data structure with cursors and a first version of a B+Tree with cursors implementation, the work presented here consisted in rewriting the C code to comply with the specification, then prove it correct using VST.
+
+% Results
+  \todo{results?}
+  The verification of the B+Tree Library has allowed us to find several bugs in the original implementation.
+
+% Outline
+  We first present the B+Tree Structure with cursors and its implementation.
+  We then define an equivalent formal model, that is used for the verification.
+  We then present the VST verification of our implementation.
+  Finally, we prove that the formal model (proved to be equivalent to the C program), complies with the abstract specification.\todo{not done yet}
+  % add section references

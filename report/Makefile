@@ -1,6 +1,6 @@
 all: report.pdf
 
-report.pdf: report.tex ../bib/btrees.bib
+report.pdf: report.tex introduction.tex btrees.tex model.tex verif.tex spec.tex conclusion.tex ../bib/btrees.bib
 	pdflatex report.tex
 	bibtex report.aux
 	pdflatex report.tex

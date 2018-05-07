@@ -42,13 +42,29 @@
 \newpage
 
 % macros
-\def\btree{BTree}
-\def\btrees{BTrees}
+\def\btree{B+Tree}
+\def\btrees{B+Trees}
 \def\todo#1{{\color{red}#1}}
 
 \section{Introduction}
 \label{sec:intro}
 \input{introduction.tex}
+
+\section{B+Trees with Cursors Library}
+\label{sec:btrees}
+\input{btrees.tex}
+
+\section{A Formal Model for B+Trees with Cursors}
+\label{sec:model}
+\input{model.tex}
+
+\section{VST Verification of B+Trees with Cursors}
+\label{sec:verif}
+\input{verif.tex}
+
+\section{Correctness of the Formal Model}
+\label{sec:spec}
+\input{spec.tex}
 
 \section{Conclusion and Future Works}
 \label{sec:conclusion}
