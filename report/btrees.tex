@@ -2,7 +2,7 @@
 % Context
 The first part of our work consisted in implementing a \btrees\ library.
 % Properties
-\btrees\ are high-performance in-memory datastructures. \btrees\ are ordered and self-balanced.
+\btrees\ are high-performance in-memory data structures. \btrees\ are ordered and self-balanced.
 This allows for fast access to the data (located at the leaves), as it suffices to go down the tree using the keys in the nodes to find the next one.
 \btrees\ have been well studied \todo{ref} and implemented numerous times. They are used in \todo{SQL,SQLite,...}.
 \todo{add figure}
@@ -16,7 +16,7 @@ We briefly describe each of these operations. More details can be found in~\cite
 If the key already exists in the \btree, its associated record should be updated to the given one. Otherwise, the record is added in the leaves.
 If it is inserted in a full leaf node, this node should be split into two. Then, the middle key is copied into the parent node to point to the new one.
 When inserting this new key, it is possible that the parent node was also full.
-In that case, we keep on recusively splitting nodes until some parent can accept a new entry, or the root has to be split (thus creating a new level in the tree).
+In that case, we keep on recursively splitting nodes until some parent can accept a new entry, or the root has to be split (thus creating a new level in the tree).
 This algorithm keeps the tree balanced.
 \todo{add figures, like in dbms} \todo{<complexity>}
 \paragraph{Deletion} .\todo{...} \todo{<complexity>}
@@ -30,13 +30,14 @@ In this case, the operations will target and affect the same part of the \btree.
 But this locality isn't exploited, as the functions always start from the root.
 Cursors aim to exploit the locality of operations on close keys, by remembering the last position where the tree was modified or accessed.
 Then for instance, to look for a new key, the function can start from the last accessed leaf. If the searched key is in the same node, then the function has linear complexity.
-Otherwise, it should go up to the node's parent before going down again. If the searched key is close, this should significanlty reduce the number of node access.
+Otherwise, it should go up to the node's parent before going down again. If the searched key is close, this should significantly reduce the number of node access.
 \todo{examples}
-Cursors were used in the \btrees\ implementation of SQLite\todo{ref}\todo{~no doc available? other refs?}.
+Cursors were used in the \btrees\ implementation of SQLite~\cite{sqlite}\todo{~no doc available? other refs?}.
 
 \subsubsection{Complexity analysis}
-We show the amortized complexity of the different opertations using a cursor. We introduce a new function that moves the cursor to the next position in the \btree.
+We show the amortized complexity of the different operations using a cursor. We introduce a new function that moves the cursor to the next position in the \btree.
 This is particularly useful for performing range queries.
+\todo{complexity with cursors}
 
 \subsection{Implementation}
-\subsubsection{Bugs of the Original Implementation}
+
