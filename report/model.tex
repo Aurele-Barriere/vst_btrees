@@ -1,1 +1,71 @@
-\todo{...}
+% contextualization
+In order to prove the correctness of our \btrees\ library, we first need a formal model, in Coq, of each type and function.
+This model will be used to specify each C function with VST.
+Then, the correctness can be proved by showing that the functions of the formal model comply with the formal specification, thus leveraging the proof to a Coq one without C semantics.
+
+% why not Brian's model ?
+We already had a formal model that complied with the abstract relation axiomatization (\todo{ref to the section where this is presented}).
+However, this \btree\ model does not exactly mimic the behavior of the C code.
+For instance, the \texttt{First} and \texttt{Last} booleans used to speed up the functions are not present in each node, and not used in the functions.
+Of course, these values could be computed, and we can prove that the optimized algorithm is equivalent to the classical one, but this would make the proof more difficult. \todo{other examples}.
+As a result, we decided to split the proof. We first prove the correctness of the C code with regards to another formal model, as close as possible to the C code.
+Then, we discuss the equivalence of the two formal models in section~\ref{sec:spec}.
+
+\paragraph{Types}
+% Types
+\begin{figure}
+\begin{lstlisting}
+(* Btree Types *)
+Inductive entry (X:Type): Type :=
+     | keyval: key -> V -> X -> entry X
+     | keychild: key -> node X -> entry X
+with node (X:Type): Type :=
+     | btnode: option (node X) -> listentry X -> bool -> bool -> bool -> X -> node X
+with listentry (X:Type): Type :=
+     | nil: listentry X
+     | cons: entry X -> listentry X -> listentry X.
+
+Definition cursor (X:Type): Type := list (node X * index). (* ancestors and index *)
+Definition relation (X:Type): Type := node X * X.  (* root and address *)
+\end{lstlisting}
+\label{fig:coqtypes}
+\caption{Coq Formal Model Types}
+\end{figure}
+
+% Types explanation
+\textbf{Fig.}~\ref{fig:coqtypes} presents the Coq Types for \btrees, cursors and relations.
+These types are parametrized by a type \texttt{X}, that can be either \texttt{val} or \texttt{unit}.
+Using \texttt{val} allows to add the C address of each node, record or relation directly into the formal type.
+We can see that entries have a key, and either a record (typed \texttt{V}) or a child (typed \texttt{node X}).
+Nodes have three booleans, representing the \texttt{isLeaf}, \texttt{First} and \texttt{Last} of the C code.
+The $ptr_0$ of a node is represented with an option, as Leaf Nodes don't have any.
+
+A cursor is implemented in Coq as a list of nodes and indexes.
+This corresponds to the arrays found in the C code. The list starts at the root and its head is the current node and index.
+Its length indicates the cursor's depth.
+Finally, a relation is simply a root (node) and the address at which the representation is in the memory.% The depth and number of records can be easily computed.
+
+\begin{figure}
+\begin{lstlisting}
+(* takes a PARTIAL cursor, n next node (pointed to by the cursor)
+   and goes down to the first key *)
+Fixpoint moveToFirst {X:Type} (n:node X) (c:cursor X) (level:nat): cursor X :=
+  match n with
+    btnode ptr0 le isLeaf First Last x =>
+    match isLeaf with
+    | true => (n,ip 0)::c
+    | false => match ptr0 with
+               | None => c      (* not possible, isLeaf is false *)
+               | Some n' => moveToFirst n' ((n,im)::c) (level+1)
+               end
+    end
+  end.
+\end{lstlisting}
+\label{fig:movetofirst}
+\caption{MoveToFirst in the formal model}
+\end{figure}  
+
+\paragraph{Functions} Then, each C function must have an equivalent in the formal Coq model.
+For instance, \textbf{Fig.}~\ref{fig:movetofirst} presents the coq \texttt{moveToFirst} function.
+It takes as input the next node to go down to. If this node is a Leaf Node, then it returns the cursor with the new node, and the index 0 (pointing to the first record).
+Otherwise, it goes down $ptr_0$, and adds to the cursor the next node and the index \texttt{im} (representing -1).
