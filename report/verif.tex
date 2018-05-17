@@ -1,2 +1,148 @@
 \subsection{Using the Verified Software Toolchain}
-\todo{...}
+% VC
+The Verified Software Toolchain uses Verifiable C to prove correctness of C programs.
+Verifiable C is made of a language and a program logic.
+The language of Verifiable C is a subset of CompCert's Clight~\cite{clight}.
+Clight was introduced as an intermediate language in CompCert, where all expressions are pure and expressions are side-effect free.
+The program logic of Verifiable C is a higher-order Separation Logic~\cite{sep} (an extension of Hoare Logic~\cite{hoare}).
+VST includes many tools, proved theorems and Coq tactics to assist the user in writing a backward\todo{?} separation logic proof in Coq that relates Clight's semantics (as defined in CompCert) and a formal specification.
+
+% work flow 
+When proving the correctness of a C program, a VST user should first generate an equivalent Clight program.
+CompCert includes the \texttt{clightgen} tool to do so. Then, the user should write a specification in Coq for each C function.
+Finally, the user can prove the correctness of each function sperately.
+%The Coq goal starts with a Separation Triple (see below).
+
+\subsubsection{Verifiable C's Separation Logic}
+% Hoare
+Hoare Logic has been extensively studied and used in the past years.
+The correctness of a program is represented by a Hoare Triple $\{P\}~c~\{Q\}$, where $P$ and $Q$ are formulas (respectively called precondition and postcondiction), and $c$ is a program.
+Hoare Logic's simple rules allow to derive Hoare Triples. For instance, the composition rule states that, if $\{P\}~c_1~\{Q\}$ and $\{Q\}~c_2~\{R\}$ hold, then $\{P\}~c_1;c_2~\{R\}$ holds.
+
+% SEP
+Separation Logic is an extension of Hoare Logic. Correctness is still modeled with a Triple $\{P\}~c~\{Q\}$. However, the formulas for pre and postconditions are augmented with a new operator $*$.
+Informally, $P_1~*~P_2$ means that the heap (or memory) can be split into two disjoint parts, one where $P_1$ holds, and another where $P_2$ holds.
+This operator is convenient when dealing with multiples objects in the memory.
+For instance, if $\btrep(n,p)$ means that the node $n$ is represented in the memory at address $p$, then $\btrep(n_1,p_1)*\btrep(n_2,p_2)$ means that the two nodes are in the heap, at different addresses (in paricular, $p_1\neq p_2$).
+Without this operator, one should add many propositions of the form $p_1\neq p_2$ when describing multiple objects in the heap, making the proof harder.
+Separation Logic also defines the \textit{magic wand} operator $-*$. Informally, $P~-*~Q$ means that if the heap is extended with a disjoint part where $P$ holds, then $Q$ holds on the total heap.
+This is particularly useful to extract information from a separation construct. \todo{example: refer to the subnode\_rep lemma}
+
+\subsubsection{Function Specification in Verifiable C}
+In Verifiable C, a pre or postcondition formula consists in three sets: PROP, LOCAL and SEP.
+PROP contains assertions of type \texttt{Prop} in Coq.
+LOCAL binds local variables to values. For instance, one could write \texttt{temp \_a (Vint(Int.repr 0))} to state that local variable \texttt{a} is bound to 0.
+SEP contains spatial assertions in separation logic. Writing \texttt{P;Q} in SEP means that $\texttt{P}~*~\texttt{Q}$ holds.
+\textbf{Fig.}~\ref{fig:spec} shows one of our specifications.
+The precondition contains several requirements, like \texttt{correct\_depth r}, meaning that the depth or the relation should not exceed an user-given value used to allocate the cursor.
+Comparing the SEP clauses of the precondition and postcondition allows to understand what happens in the memory.
+Here, the relation is unchanged, while the cursor is replaced with the one returned by the Coq function \texttt{moveToFirst} (see \textbf{Fig.}~\ref{fig:movetofirst}).
+
+\begin{figure}
+\begin{lstlisting}
+Definition moveToFirst_spec : ident * funspec :=
+  DECLARE _moveToFirst
+  WITH r:relation val, c:cursor val, pc:val, n:node val
+  PRE[ _node OF tptr tbtnode, _cursor OF tptr tcursor, _level OF tint ]
+    PROP(partial_cursor c r; root_integrity (get_root r);
+         next_node c (get_root r) = Some n; correct_depth r)
+    LOCAL(temp _cursor pc; temp _node (getval n);
+          temp _level (Vint(Int.repr(Zlength c))))
+    SEP(relation_rep r; cursor_rep c r pc)
+  POST[ tvoid ]
+    PROP()
+    LOCAL()
+    SEP(relation_rep r; cursor_rep (moveToFirst n c (length c)) r pc).
+\end{lstlisting}
+\label{fig:spec}
+\caption{Formal Specification of the \texttt{moveToFirst} function}
+\end{figure}
+
+
+
+\subsection{\btrees\ Verification}
+% rep functions
+We first define the functions \texttt{btnode\_rep}, \texttt{cursor\_rep} and \texttt{cursor\_rep} that are used to specify that each structure is represented in the memory.
+They use a combination of \texttt{data\_at} and \texttt{malloc\_token} defined by VST.
+\textbf{Fig.}~\ref{fig:btnoderep} shows one of these definitions.\todo{move that to annex!}
+We then prove multiple lemmas about these representations. For instance, if a node is represented in the memory at some adress $p$, then $p$ is the content of a valid pointer.
+
+% locals
+We then define properties of the \btrees\ and cursors that are required to prove correctness.
+Such definitions include \texttt{partial\_cursor c r}, meaning that \texttt{c} is a correct cursor for relation \texttt{r} that stops at an intern node.
+By correct, we mean that each node is the $n^{th}$ child of the previous node, where $n$ is the previous index.\todo{is that a good example?}
+
+% subnode, subnode_rep
+We then prove multiple lemmas to help us reason with the memory representations of each structure.
+For instance, the function \texttt{currNode} returns a pointer to the last node of a cursor.
+In the verification proof, we need to access this pointer by proving that the current node is represented somewhere in the memory.
+However, the function precondition only states that the root node is represented in the memory.
+To solve this, we first need to prove that the current node is a sub-node of the root.
+This is done by proving the following theorem:
+\lstinline{forall X (c:cursor X) r, complete_cursor_correct_rel c r -> subnode (currNode c r) (get_root r)}.
+
+We then need to prove that, if a node $root$ is represented in the heap, and some other node $n$ is a sub-node of $root$, then $n$ is also represented in the heap.
+This is true because the function \btrep\ calls itself recursively on each children (see \textbf{Fig.}~\ref{fig:btnoderep}).
+However, because \btrep\ is a separating clause, we can't simply use an implication. We need to rewrite it as a separation conjunction.
+This is done by proving the following theorem, \textbf{subnode\_rep}:
+
+\lstinline{subnode n root -> btnode_rep root = btnode_rep n * (btnode_rep n -* btnode_rep root).}
+
+\todo{explanation? explain wandframeelim? wouldn't it be too technical?}
+
+% body proofs
+After proving many such theorems and writing every function specification (see \textbf{Fig.}~\ref{fig:spec}), we need to prove the correctness of each function.
+These proofs consists in proving a Separation Triple $\{P\}~c~\{Q\}$, where $P$ and $Q$ are the precondition and postcondition defined in the specification, and $c$ is the Clight function.
+Each triple is proved by moving forward through $c$.
+For instance, if the first instruction of $c$ is an assignment \texttt{a:=0}, using the \texttt{forward} tactic of VST will turn the proof goal $\{P\}~\texttt{a=0};~c'~\{Q\}$ into $\{P'\}~c'~\{Q\}$,
+where $P'$ is $P$ with the new LOCAL binding: \texttt{temp \_a (Vint(Int.repr 0))}.
+Occasionnally, other goals have to be proven.
+Everytime an array is accessed, we must prove that the index is in the right range.
+Everytime a pointer is dereferenced, we must prove that it is valid.
+Even if VST is able to infer the next precondition to use for sequences of instructions, we must still provide loop invariants when going through a loop or a branching statement.
+When calling another function of the \btrees\ library, we must prove that the precondition of this function holds.
+Finally, when we went through every statement of $c$, we are left with a goal $\{P\}~\texttt{skip}~\{Q\}$, where $Q$ is the function postcondition, and $P$ is the new precondition obtained after moving through the program.
+Such goals (called entailments) are proved using separation logic rules implemented in VST.
+
+\subsection{Results}
+\todo{TODO: what ha been proved? what's left?}
+
+
+
+\begin{figure}
+\begin{lstlisting}
+Fixpoint entry_rep (e:entry val): mpred:=
+  match e with
+  | keychild _ n => btnode_rep n
+  | keyval _ v x => value_rep v x
+  end
+with btnode_rep (n:node val):mpred :=
+  match n with btnode ptr0 le b First Last pn =>
+  EX ent_end:list(val * (val + val)),
+  malloc_token Tsh tbtnode pn *
+  data_at Tsh tbtnode (Val.of_bool b,(
+                       Val.of_bool First,(
+                       Val.of_bool Last,(
+                       Vint(Int.repr (Z.of_nat (numKeys n))),(
+                       match ptr0 with
+                       | None => nullval
+                       | Some n' => getval n'
+                       end,(
+                       le_to_list le ++ ent_end)))))) pn *
+  match ptr0 with
+  | None => emp
+  | Some n' => btnode_rep n'
+  end *
+  le_iter_sepcon le
+  end
+with le_iter_sepcon (le:listentry val):mpred :=
+  match le with
+  | nil => emp
+  | cons e le' => entry_rep e * le_iter_sepcon le'
+  end.
+\end{lstlisting}
+\label{fig:btnoderep}
+\caption{Representing a \btree\ node in the memory}
+\end{figure}
+
+
