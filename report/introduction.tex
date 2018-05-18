@@ -10,11 +10,6 @@
   It uses a combination of the well-studied \btrees\ (a variation of the BTrees introduced in~\cite{btrees}) and Tries data structures.
   \todo{describe results and context}
 
-% DeepDB
-  We \todo{(we? deepdb?)} decided to implement and verify a high-performance Main-Memory Key-Value Store, inspired by MassTree.
-  Just like MassTree, our implementation should use B+Trees inside a Trie-like structure.
-  However, our B+Tree Implementation uses Cursors to reduce the complexity of some operations for partially-sorted data.
-
 % VST Verification
   Formal verification of C programs has been the focus of many recent works.
   In particular, CompCert~\cite{compcert,compcert2} is a fully verified C compiler in Coq~\cite{coq}, which formally defines C and assembly semantics and proves that the source and compiled programs have equivalent behaviors.
@@ -23,7 +18,7 @@
   \todo{more about VST}
 
 % Contribution
-  This paper focuses on the implementation, specification and verification of the B+Trees with Cursors Library. We first chose to consider a sequential implementation.
+  This paper focuses on the implementation, specification and verification of a B+Trees with Cursors Library. We first chose to consider a sequential implementation.
   Ultimately, our data structure should allow a concurrent usage, but we believe that formal verification of a sequential program is a mandatory first step towards the verification of a concurrent one.\todo{badly put}
   Given a formal specification of an abstract key-value data structure with cursors and a first version of a B+Tree with cursors implementation, the work presented here consisted in rewriting the C code to comply with the specification, then prove it correct using VST.
 
