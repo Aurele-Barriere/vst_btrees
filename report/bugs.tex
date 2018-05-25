@@ -46,5 +46,5 @@ Overall, more than 70\% of the original library was rewritten.
 Other changes were made to the original library to make verification possible.
 For instance, VST doesn't allow to verify an assignment where the type is a user-defined structure.\todo{why? is this UB? would it be an issue if we kept it?}
 
-
-\paragraph{TODO} New bug found: calling moveToFirst in moveToLast
+\paragraph{Wrong function call} The implementation of \texttt{moveToPrevious} used to call \texttt{moveToFirst} instead of \texttt{movetToLast}, meaning that the cursor would be moved several positions backward.
+Because this function wasn't tested, this simple bug was only found when doing the verification.
