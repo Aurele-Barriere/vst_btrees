@@ -1,0 +1,59 @@
+%% BTree Style
+\tikzstyle{btreeptr} = [draw, semithick, fill=blue!10, minimum height=2em]
+\tikzstyle{btreeval} = [draw, semithick, fill=yellow!10, minimum size=2em]
+\tikzstyle{btreevale} = [draw,semithick, fill=red!30!blue!15, minimum size=2em]
+\tikzstyle{btlink} = [draw, semithick, ->, >=triangle 45]
+
+\def\beforeinsert{
+\begin{center}
+  \scalebox{.55}{
+    \begin{tikzpicture}
+      % 
+      \btreeinodefour{root}{20}{}{}{};
+      \xyshift{-40mm}{-20mm}{\btreeinodefour{n1}{5}{9}{12}{15}}
+      \xyshift{40mm}{-20mm}{\btreeinodefour{n2}{25}{30}{}{}}
+      % 
+      \xyshift{-130mm}{-40mm}{\btreelnodefour{n11}{0}{1}{2}{3}}
+      \xyshift{-95mm}{-40mm}{\btreelnodefour{n12}{5}{6}{7}{8}}
+      \xyshift{-60mm}{-40mm}{\btreelnodefour{n13}{9}{10}{11}{}}
+      \xyshift{-25mm}{-40mm}{\btreelnodefour{n14}{12}{14}{}{}}
+      \xyshift{10mm}{-40mm}{\btreelnodefour{n15}{15}{18}{}{}}
+      \xyshift{45mm}{-40mm}{\btreelnodefour{n21}{20}{22}{23}{}}
+      \xyshift{80mm}{-40mm}{\btreelnodefour{n22}{25}{27}{28}{}}
+      \xyshift{115mm}{-40mm}{\btreelnodefour{n23}{30}{33}{34}{35}}
+      % 
+      \foreach \x in {1,2} { \btreelink{root-\x}{n\x} }
+      \foreach \x in {1,2,3,4,5} { \btreelink{n1-\x}{n1\x} }
+      \foreach \x in {1,2,3} { \btreelink{n2-\x}{n2\x} }
+    \end{tikzpicture}
+  }
+\end{center}}
+
+\def\afterinsert{
+\begin{center}
+  \scalebox{.55}{
+    \begin{tikzpicture}
+      % 
+      \btreeinodefour{root}{9}{20}{}{};
+      \xyshift{-60mm}{-20mm}{\btreeinodefour{n1}{2}{5}{}{}}
+      \xyshift{-0mm}{-20mm}{\btreeinodefour{n2}{12}{15}{}{}}
+      \xyshift{60mm}{-20mm}{\btreeinodefour{n3}{25}{30}{}{}}
+      % 
+      \xyshift{-165mm}{-40mm}{\btreelnodefour{n11}{0}{1}{2}{}}
+      \xyshift{-130mm}{-40mm}{\btreelnodefour{n12}{3}{4}{}{}}
+      \xyshift{-95mm}{-40mm}{\btreelnodefour{n13}{5}{6}{7}{8}}
+      \xyshift{-60mm}{-40mm}{\btreelnodefour{n21}{9}{10}{11}{}}
+      \xyshift{-25mm}{-40mm}{\btreelnodefour{n22}{12}{14}{}{}}
+      \xyshift{10mm}{-40mm}{\btreelnodefour{n23}{15}{18}{}{}}
+      \xyshift{45mm}{-40mm}{\btreelnodefour{n31}{20}{22}{23}{}}
+      \xyshift{80mm}{-40mm}{\btreelnodefour{n32}{25}{27}{28}{}}
+      \xyshift{115mm}{-40mm}{\btreelnodefour{n33}{30}{33}{34}{35}}
+      % 
+      \foreach \x in {1,2,3} { \btreelink{root-\x}{n\x} }
+      \foreach \x in {1,2,3} { \btreelink{n1-\x}{n1\x} }
+      \foreach \x in {1,2,3} { \btreelink{n2-\x}{n2\x} }
+      \foreach \x in {1,2,3} { \btreelink{n3-\x}{n3\x} }
+    \end{tikzpicture}
+  }
+\end{center}}
+
