@@ -3,7 +3,7 @@
 The Verified Software Toolchain uses Verifiable C to prove correctness of C programs.
 Verifiable C is made of a language and a program logic.
 The language of Verifiable C is a subset of CompCert's Clight~\cite{clight}.
-Clight was introduced as an intermediate language in CompCert, where all expressions are pure and expressions are side-effect free.
+Clight was introduced as an intermediate language in CompCert, where all expressions are pure and side-effect free.
 The program logic of Verifiable C is a higher-order Separation Logic~\cite{sep} (an extension of Hoare Logic~\cite{hoare}).
 VST includes many tools, proved theorems and Coq tactics to assist the user in writing a backward\todo{?} separation logic proof in Coq that relates Clight's semantics (as defined in CompCert) and a formal specification.
 
@@ -34,18 +34,17 @@ PROP contains assertions of type \texttt{Prop} in Coq.
 LOCAL binds local variables to values. For instance, one could write \texttt{temp \_a (Vint(Int.repr 0))} to state that local variable \texttt{a} is bound to 0.
 SEP contains spatial assertions in separation logic. Writing \texttt{P;Q} in SEP means that $\texttt{P}~*~\texttt{Q}$ holds.
 \textbf{Fig.}~\ref{fig:spec} shows one of our specifications.
-The precondition contains several requirements, like \texttt{correct\_depth r}, meaning that the depth or the relation should not exceed an user-given value used to allocate the cursor.
+The precondition contains several requirements, like \texttt{next\_node c (get\_root r) = Some n}, meaning that \texttt{n} is the node pointed to by the partial cursor.
 Comparing the SEP clauses of the precondition and postcondition allows to understand what happens in the memory.
 Here, the relation is unchanged, while the cursor is replaced with the one returned by the Coq function \texttt{moveToFirst} (see \textbf{Fig.}~\ref{fig:movetofirst}).
 
 \begin{figure}
-\begin{lstlisting}
+\begin{lstlisting}[language=Coq]
 Definition moveToFirst_spec : ident * funspec :=
   DECLARE _moveToFirst
   WITH r:relation val, c:cursor val, pc:val, n:node val
   PRE[ _node OF tptr tbtnode, _cursor OF tptr tcursor, _level OF tint ]
-    PROP(partial_cursor c r; root_integrity (get_root r);
-         next_node c (get_root r) = Some n; correct_depth r)
+    PROP(partial_cursor c r; next_node c (get_root r) = Some n)
     LOCAL(temp _cursor pc; temp _node (getval n);
           temp _level (Vint(Int.repr(Zlength c))))
     SEP(relation_rep r; cursor_rep c r pc)
@@ -62,7 +61,7 @@ Definition moveToFirst_spec : ident * funspec :=
 
 \subsection{\btrees\ Verification}
 % rep functions
-We first define the functions \texttt{btnode\_rep}, \texttt{cursor\_rep} and \texttt{cursor\_rep} that are used to specify that each structure is represented in the memory.
+We first define the functions \texttt{btnode\_rep}, \texttt{cursor\_rep} and \texttt{relation\_rep} that are used to specify that each structure is represented in the memory.
 They use a combination of \texttt{data\_at} and \texttt{malloc\_token} defined by VST.
 \textbf{Fig.}~\ref{fig:btnoderep} shows one of these definitions.\todo{move that to annex!}
 We then prove multiple lemmas about these representations. For instance, if a node is represented in the memory at some adress $p$, then $p$ is the content of a valid pointer.
@@ -70,7 +69,7 @@ We then prove multiple lemmas about these representations. For instance, if a no
 % locals
 We then define properties of the \btrees\ and cursors that are required to prove correctness.
 Such definitions include \texttt{partial\_cursor c r}, meaning that \texttt{c} is a correct cursor for relation \texttt{r} that stops at an intern node.
-By correct, we mean that each node is the $n^{th}$ child of the previous node, where $n$ is the previous index.\todo{is that a good example?}
+By correct, we mean that each node is the $n^{th}$ child of the previous node, where $n$ is the previous index.
 
 % subnode, subnode_rep
 We then prove multiple lemmas to help us reason with the memory representations of each structure.
@@ -110,7 +109,7 @@ Such goals (called entailments) are proved using separation logic rules implemen
 
 
 \begin{figure}
-\begin{lstlisting}
+\begin{lstlisting}[language=Coq]
 Fixpoint entry_rep (e:entry val): mpred:=
   match e with
   | keychild _ n => btnode_rep n
