@@ -1,3 +1,4 @@
+\include{figures}
 \subsection{B+Trees}
 % Context
 The first part of our work consisted in modifying a \btrees\ with cursors library.
@@ -32,6 +33,9 @@ Because this node is full too, it should be split.
 Because intern nodes do no contain records, the middle key can simply be pushed to the root without being copied.
 The resulting \btree, after insertion, can be seen \textbf{Fig}~\ref{fig:btinsert}.
 
+\beforeinsert
+\afterinsert
+
 \paragraph{Accessing a Record} Takes a key as input. Because the tree is ordered, it suffices to go down from the root.
 At each node, the values of the keys indicate which child to go to at the next step.
 The complexity is $\mathcal{O}(log_{f}(n))$, where $f$ is the Fanout of the tree and $n$ the number of records.
@@ -46,25 +50,61 @@ Then for instance, to look for a new key, the function can start from the last a
 Otherwise, it should go up to the node's parent before going down again. If the searched key is close, this should significantly reduce the number of node access.
 
 % Cursor definition
-A Cursor is implemented as an array of pointers to entries.
-The first entry of the cursor should be the root of the \btree.
-Then the following entries describe a path from the root to an entry in a leaf node.
+A Cursor is implemented as an array of pairs. Each pair contains a pointer to a node and an index for that node.
+The first node of the cursor should be the root of the \btree.
+Then the following nodes describe a path from the root to an entry in a leaf node.
+An example of cursor can be found in \textbf{Fig.}~\ref{fig:cursor}.
+A cursor's length should always be equal to the depth of the \btree\ it refers to, thus pointing to a record.
+To the best of our knowledge, cursors were only used in the \btrees\ implementation of SQLite~\cite{sqlite}.
 
-\include{figures}
 \cursor
 
+% how are the functions changed
+With a cursor, basic functions (insertion, accessing a record) do not start at the root anymore, but from the leaf node that the cursor is pointing to.
+For instance, when accessing the record for a given key $k$, if $k$ is in the same leaf node as the cursor, then we can fetch the associated record in constant-time.
+Whenever $k$ is not in the same leaf node, we need to go up in the \btree\ using the previous levels of the cursors, until we reach a parent node of the desired key.
+We can then go down the \btree\ until $k$ is found.
+For instance, if we search for key 14 in \textbf{Fig.}~\ref{fig:cursor}, we can first see that 14 is not in the leaf node pointed to by the cursor (containing only keys from 5 to 8).
+We then go up in the \btree, using the cursor, to the intern node containing 5, 9, 12 and 15.
+Because it contains keys lesser and greater than 14, we know that this node is a parent node for 14.
+Finally, we go down to the fourth child, containing keys 12 and 14, and we can get the desired record.
+This new algorithm is still $\mathcal{O}(log_{f}(n))$ in the worst-case (if we need to go up to the root of the tree, then go down to the leaves),
+but is faster when looking for close keys.
+In particular, accessing the record of each key sequentially has amortized constant time complexity\todo{ref tosin's thesis}.
 
-\todo{examples}
-Cursors were used in the \btrees\ implementation of SQLite~\cite{sqlite}\todo{~no doc available? other refs?}.
-
-\subsubsection{Complexity analysis}
-We show the amortized complexity of the different operations using a cursor. We introduce a new function that moves the cursor to the next position in the \btree.
-This is particularly useful for performing range queries.
-\todo{complexity with cursors}
+Inserting a new record has a similar complexity (faster when the cursor is already close to the key to insert).
+To perform range queries, we need to introduce a new function, \textit{movetonext}, that moves the cursor to the next record in a \btree.
 
 \subsection{Implementation}
-\todo{TODO: brief description of each function (all 25?)}
+We modified DeepDB's implementation of \btrees\ with cursors. The C types are the following:
+
+\begin{multicols}{2}
+\lstinputlisting[language=C]{types.c}
+\end{multicols}
+
+A node contains an array of entries.
+Each of these entries contains the pointer to the associated child (for intern nodes) or the associated record (for leaf nodes).
+Because intern nodes need one more child than they have entries, the node also contains \texttt{ptr0} which holds the pointer to the first child (or \texttt{NULL} for a leaf node).
+Nodes also contain booleans that indicate if the node is the first or the last of its level in the \btree.
+This is used to speed up some functions.
+Finally, a cursor has an array of ancestors (the nodes, from the root to the leaf node pointed to) and an array of indexes locating the next child at each level.
+
+This library contains 37 functions, all of which will be verified in section\todo{ref section}.
+Deletion hasn't been implemented yet.
+The functions that can be used by a client of the library include:
+\begin{itemize}
+\item \lstinline{Relation_T RL_NewRelation(void);}  creates a new, empty relation.
+\item \lstinline{Cursor_T RL_NewCursor(Relation_T relation);}  creates a cursor for a given relation, pointing to the first key.
+\item \lstinline{Bool RL_CursorIsValid(Cursor_T cursor);}  returns true if the cursor is pointing to a key.
+\item \lstinline{Key RL_GetKey(Cursor_T cursor);}  returns the key pointed to by a cursor.
+\item \lstinline{const void* RL_GetRecord(Cursor_T cursor);}  returns the record pointed to by a cursor.
+\item \lstinline{void RL_PutRecord(Cursor_T cursor, Key key, const void* record);}  inserts a new record.
+\item \lstinline{Bool RL_MoveToKey(Cursor_T cursor, Key key);}  moves the cursor to a given key.
+\item \lstinline{Bool RL_MoveToFirst(Cursor_T btCursor);}  moves the cursor to te first key.
+\item \lstinline{void RL_MoveToNext(Cursor_T btCursor);}  moves the cursor to the next position.
+\item \lstinline{void RL_MoveToPrevious(Cursor_T btCursor);}  moves the cursor to the previous position.
+\item \lstinline{Bool RL_IsEmpty(Cursor_T btCursor);}  returns true if the \btree\ of the cursor is empty.
+\item \lstinline{size_t RL_NumRecords(Cursor_T btCursor);}  returns the number of keys in the \btree.
+\end{itemize}
 
 
-\beforeinsert
-\afterinsert
