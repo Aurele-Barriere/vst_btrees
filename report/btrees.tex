@@ -1,36 +1,59 @@
 \subsection{B+Trees}
 % Context
-The first part of our work consisted in implementing a \btrees\ library.
+The first part of our work consisted in modifying a \btrees\ with cursors library.
 % Properties
 \btrees\ are high-performance in-memory data structures. \btrees\ are ordered and self-balanced.
 This allows for fast access to the data (located at the leaves), as it suffices to go down the tree using the keys in the nodes to find the next one.
-\btrees\ have been well studied \todo{ref} and implemented numerous times. They are used in \todo{SQL,SQLite,...}.
-\todo{add figure}
-\todo{definition of fanout, number of childs etc}
-\todo{linked lists!}
-The available operations on a \btree\ typically include inserting a record (associated with a key), deleting a record and accessing the record associated to a given key (if it has been inserted).
+\btrees\ have been well studied~\cite{dbms} and implemented numerous times. % They are used in \todo{SQL,SQLite,...}.
+A \btree\ example can be seen \textbf{Fig.}~\ref{fig:bt}.
+The keys in the leaves point to a record (indicated in the figure by a * next to the key).
+The fanout value in this example is 4 (the maximum number of keys in each node).
+Every intern node has $n+1$ children, where $n$ is its number of keys.
+Traditionnally, \btrees\ implement cross-links between leaves, meaning that each leaf node points to the previous and the next one.
+This allows for range queries as one can always find te next record.
+However, because our implementation is using cursors (see below), these links are not needed.
 
 % Operations
-We briefly describe each of these operations. More details can be found in~\cite{dbms}.
+The available operations on a \btree\ typically include inserting a record (associated with a key), deleting a record, accessing the record associated to a given key (if it has been inserted) and accessing the records corresponding to a range of keys.
+We briefly describe some of these operations. More details can be found in~\cite{dbms}.
 \paragraph{Insertion} Takes a key and a record.
 If the key already exists in the \btree, its associated record should be updated to the given one. Otherwise, the record is added in the leaves.
 If it is inserted in a full leaf node, this node should be split into two. Then, the middle key is copied into the parent node to point to the new one.
 When inserting this new key, it is possible that the parent node was also full.
 In that case, we keep on recursively splitting nodes until some parent can accept a new entry, or the root has to be split (thus creating a new level in the tree).
 This algorithm keeps the tree balanced.
-\todo{add figures, like in dbms} \todo{<complexity>}
-\paragraph{Deletion} .\todo{...} \todo{<complexity>}
+The complexity of inserting a new record is $\mathcal{O}(log_{f}(n))$, where $f$ is the Fanout of the tree and $n$ the number of records.
+Indeed, the number of operations (key comparisons and node splittings) is linear in the depth of the tree.
+
+For instance, a record with the key 4 in \textbf{Fig.}~\ref{fig:bt} should be inserted in the first leaf node (containing keys 0, 1, 2 and 3).
+Because this node is full, it should be split into two: one containing 0, 1, 2, and the other containing keys 3 and 4.
+Then, key 2 should be inserted into the parent node (with keys 5, 9, 12, 15).
+Because this node is full too, it should be split.
+Because intern nodes do no contain records, the middle key can simply be pushed to the root without being copied.
+The resulting \btree, after insertion, can be seen \textbf{Fig}~\ref{fig:btinsert}.
+
 \paragraph{Accessing a Record} Takes a key as input. Because the tree is ordered, it suffices to go down from the root.
-At each node, the values of the keys indicate which child to go to at the next step. \todo{illustrate on figure} \todo{<complexity>}
+At each node, the values of the keys indicate which child to go to at the next step.
+The complexity is $\mathcal{O}(log_{f}(n))$, where $f$ is the Fanout of the tree and $n$ the number of records.
 
 \subsection{Cursors}
 % Why are cursors useful
-On numerous occasions, inserting or accessing data is done on partially sorted keys.\todo{justification}
+On numerous occasions, inserting or accessing data can be done on partially sorted keys.
 In this case, the operations will target and affect the same part of the \btree.
 But this locality isn't exploited, as the functions always start from the root.
 Cursors aim to exploit the locality of operations on close keys, by remembering the last position where the tree was modified or accessed.
 Then for instance, to look for a new key, the function can start from the last accessed leaf. If the searched key is in the same node, then the function has linear complexity.
 Otherwise, it should go up to the node's parent before going down again. If the searched key is close, this should significantly reduce the number of node access.
+
+% Cursor definition
+A Cursor is implemented as an array of pointers to entries.
+The first entry of the cursor should be the root of the \btree.
+Then the following entries describe a path from the root to an entry in a leaf node.
+
+\include{figures}
+\cursor
+
+
 \todo{examples}
 Cursors were used in the \btrees\ implementation of SQLite~\cite{sqlite}\todo{~no doc available? other refs?}.
 
@@ -42,6 +65,6 @@ This is particularly useful for performing range queries.
 \subsection{Implementation}
 \todo{TODO: brief description of each function (all 25?)}
 
-\include{figures}
+
 \beforeinsert
 \afterinsert
