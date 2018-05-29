@@ -5,8 +5,9 @@
 \tikzstyle{btlink} = [draw, semithick, ->, >=triangle 45]
 
 \def\beforeinsert{
-\begin{center}
-  \scalebox{.55}{
+\begin{figure}
+\makebox[\textwidth][c]{
+  \scalebox{.5}{
     \begin{tikzpicture}
       % 
       \btreeinodefour{root}{20}{}{}{};
@@ -26,12 +27,17 @@
       \foreach \x in {1,2,3,4,5} { \btreelink{n1-\x}{n1\x} }
       \foreach \x in {1,2,3} { \btreelink{n2-\x}{n2\x} }
     \end{tikzpicture}
-  }
-\end{center}}
+    
+  }}
+  \caption{A \btree}
+  \label{fig:bt}
+  \end{figure}}
+
 
 \def\afterinsert{
-\begin{center}
-  \scalebox{.55}{
+\begin{figure}
+\makebox[\textwidth][c]{
+  \scalebox{.5}{
     \begin{tikzpicture}
       % 
       \btreeinodefour{root}{9}{20}{}{};
@@ -54,6 +60,9 @@
       \foreach \x in {1,2,3} { \btreelink{n2-\x}{n2\x} }
       \foreach \x in {1,2,3} { \btreelink{n3-\x}{n3\x} }
     \end{tikzpicture}
-  }
-\end{center}}
+  }}
+  \caption{\textbf{Fig.}~\ref{fig:bt} after inserting a new record for key 4}
+  \label{fig:btinsert}
+  \end{figure}
+}
 

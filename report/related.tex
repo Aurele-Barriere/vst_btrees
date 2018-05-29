@@ -1,19 +1,23 @@
 % deepdb
-This verification work is part of the DeepDB project\todo{ref}.
+This verification work is part of the DeepDB project~\cite{deepdb}.
 Its goal is to provide a verified library for a high-performance concurrent Main-Memory database.
 Inspired by MassTree, this database system also uses a combination of \btrees\ and Tries structures.
 
 % what has been done
-As part of the deepDB project, a formal Coq specification of abstract relations with cursors has been defined\todo{ref thesis Brian}.
+As part of the DeepDB project, a formal Coq specification of abstract relations with cursors has been defined\todo{ref thesis Brian}.
 A C implementation of a sequential version of the database has also been done\todo{ref thesis Tosin}.
 This implementation contains a first version of a library for \btrees\ wih cursors, a library for border nodes~\cite{masstree} and a library for Tries.
-This work is the first verification step: it includes modifying the \btrees\ library and proving it correct with regards to the specification.
+The work presented in this paper is the first verification step: it includes modifying the \btrees\ library and proving it correct with regards to the abstract specification.
 
 % verif of trees
 Previous work has dealt with the verification of tree-like structures.
 Verified Functional Algorithms~\cite{vfa} includes a Coq formal model for Binary-Search Trees and its verification.
 Red-Black Trees have also been verified in~\cite{redblack}.
 VST's examples~\cite{vst} include the VST verification of a C implementation of Binary-Search Trees.
+
+% formalisation of databases
+Recent work has been made to formalize SQL semantics~\cite{coqsql}.
+\todo{more on this}
 
 % concurrent
 Even though the current version is sequential, we believe that implementing concurrency would be a feasible next step.
