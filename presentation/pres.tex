@@ -1,12 +1,22 @@
-\documentclass[page number]{beamer}
+\documentclass[page number,usenames,dvipsnames]{beamer}
 \usetheme[sectionpage=none,numbering=fraction,progressbar=foot]{metropolis}
 
 \usepackage{pgf,tikz}
 \usetikzlibrary{arrows}
 \usetikzlibrary{positioning,shapes,fit}
-\usepackage{xcolor}
+\usepackage{graphicx}
 \usepackage{amssymb}
 \usepackage{amsmath}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{pgf,tikz}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{wrapfig}
+\usetikzlibrary{positioning,shapes}
+\usepackage{multicol}
+\usepackage{btreecursor}
+\usepackage{lstcoq}
 
 \makeatletter
 \makeatother
@@ -47,6 +57,8 @@
   \end{frame}
 }
 
+\include{figures}
+
 \begin{frame}[plain,noframenumbering]
   \vspace{-2cm}
   \maketitle
@@ -64,21 +76,51 @@
 
 \begin{frame}{B+Trees}
   % presentation of B+Trees library
-
+  \beforeinsert
+  \vfill
   % properties
+  \begin{multicols}{2}
+    \begin{exampleblock}{Properties}
+      \begin{itemize}
+      \item Ordered
+      \item Balanced
+      \item Fanout
+      \end{itemize}
+    \end{exampleblock}
+      \begin{block}{Operations}
+        \begin{itemize}
+        \item Insert key and record
+        \item Get record of given key
+        \item {\color{mDarkRed}Delete record of given key}
+        \item Range queries
+        \end{itemize}
+      \end{block}
+  \end{multicols}
 
   % operations
 \end{frame}
 
 \begin{frame}{B+Trees Insertion}
-  % example
+  \beforeinsert
+  \vfill
+  \pause
+  \afterinsert
 \end{frame}
 
 \begin{frame}{Cursors}
   % example.
-
+  \cursor
+  \vfill
   % operations
-
+  \begin{block}{Operations}
+    \begin{itemize}
+    \item Insert key and record
+    \item Get record pointed to by the cursor
+    \item Move cursor to given key
+    \item Move cursor to next or previous key
+    \item Move cursor to first or last key
+    \end{itemize}
+  \end{block}
   % complexity
 \end{frame}
 
@@ -97,12 +139,23 @@
   
 \end{frame}
 
-\begin{frame}{Specifying a C program with VST}
-
-  % workflow
-
-  % function spec
+\begin{frame}[fragile]{Specifying a C program with VST}
+ \begin{lstlisting}[language=Coq,basicstyle=\scriptsize]
+Definition moveToFirst_spec : ident * funspec :=
+  DECLARE _moveToFirst
+  WITH r:relation val, c:cursor val, pc:val, n:node val
+  PRE[ _node OF tptr tbtnode, _cursor OF tptr tcursor, _level OF tint ]
+    PROP(partial_cursor c r; next_node c (get_root r) = Some n)
+    LOCAL(temp _cursor pc; temp _node (getval n);
+          temp _level (Vint(Int.repr(Zlength c))))
+    SEP(relation_rep r; cursor_rep c r pc)
+  POST[ tvoid ]
+    PROP()
+    LOCAL()
+    SEP(relation_rep r; cursor_rep (moveToFirst n c (length c)) r pc).
+\end{lstlisting}
 \end{frame}
+
 
 \begin{frame}{Proving a C program correct with VST}
 
