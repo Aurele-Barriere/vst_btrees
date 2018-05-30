@@ -4,7 +4,7 @@ This model will be used to specify each C function with VST.
 Then, the correctness can be proved by showing that the functions of the formal model comply with the formal specification, thus leveraging the proof to a Coq one without C semantics.
 
 % why not Brian's model ?
-DeepDB already contained a formal model that complied with the abstract relation axiomatization\todo{ref brian thesis}.
+DeepDB already contained a formal model that complied with the abstract relation axiomatization~\cite{brian}.
 However, this \btree\ model does not exactly mimic the behavior of the C code.
 For instance, entries of the C implementation contain a pointer to the child with greater keys.
 Then, the node contains a pointer to the first child.
@@ -13,7 +13,7 @@ Moreover, the \texttt{First} and \texttt{Last} booleans used to speed up the fun
 As a result, we decided to define another formal model, as close as possible to the C code.
 This new formal model will be used to specify the C functions with VST.
 
-\paragraph{Types}
+
 % Types
 \begin{figure}
 \begin{lstlisting}[language=Coq]
@@ -30,14 +30,14 @@ with listentry (X:Type): Type :=
 Definition cursor (X:Type): Type := list (node X * index). (* ancestors and index *)
 Definition relation (X:Type): Type := node X * X.  (* root and address *)
 \end{lstlisting}
-\label{fig:coqtypes}
+\label{coqtypes}
 \caption{Coq Formal Model Types}
 \end{figure}
 
 % Types explanation
-\textbf{Fig.}~\ref{fig:coqtypes} presents the Coq Types for \btrees, cursors and relations. \todo{update for dependent relation type}
+\paragraph{Types}\textbf{Fig.}~\ref{coqtypes} presents the Coq Types for \btrees, cursors and relations. \todo{update for dependent relation type}
 These types are parametrized by a type \texttt{X}, that can be either \texttt{val} or \texttt{unit}.
-Using \texttt{val} allows to add the C address of each node, record or relation directly into the formal type.
+Using \texttt{val} allows to add the C address of each node, record or relation directly into the formal type.\todo{why?}
 We can see that entries have a key, and either a record (typed \texttt{V}) or a child (typed \texttt{node X}).
 Nodes have three booleans, representing the \texttt{isLeaf}, \texttt{First} and \texttt{Last} of the C code.
 The $ptr_0$ of a node is represented with an option, as Leaf Nodes don't have any.
@@ -46,6 +46,11 @@ A cursor is implemented in Coq as a list of nodes and indexes.
 This corresponds to the arrays found in the C code. The list starts at the root and its head is the current node and index.
 Its length indicates the cursor's depth.
 Finally, a relation is simply a root (node) and the address at which the representation is in the memory.% The depth and number of records can be easily computed.
+
+\paragraph{Functions} Then, each C function must have an equivalent in the formal Coq model.
+For instance, \textbf{Fig.}~\ref{movetofirst} presents the coq \texttt{moveToFirst} function.
+It takes as input the next node to go down to. If this node is a Leaf Node, then it returns the cursor with the new node, and the index 0 (pointing to the first record).
+Otherwise, it goes down $ptr_0$, and adds to the cursor the next node and the index \texttt{im} (representing -1).
 
 \begin{figure}
 \begin{lstlisting}[language=Coq]
@@ -63,11 +68,6 @@ Fixpoint moveToFirst {X:Type} (n:node X) (c:cursor X) (level:nat): cursor X :=
     end
   end.
 \end{lstlisting}
-\label{fig:movetofirst}
 \caption{MoveToFirst in the formal model}
+\label{movetofirst}
 \end{figure}  
-
-\paragraph{Functions} Then, each C function must have an equivalent in the formal Coq model.
-For instance, \textbf{Fig.}~\ref{fig:movetofirst} presents the coq \texttt{moveToFirst} function.\todo{why isn't label working?}
-It takes as input the next node to go down to. If this node is a Leaf Node, then it returns the cursor with the new node, and the index 0 (pointing to the first record).
-Otherwise, it goes down $ptr_0$, and adds to the cursor the next node and the index \texttt{im} (representing -1).

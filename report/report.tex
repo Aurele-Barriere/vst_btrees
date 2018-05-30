@@ -4,6 +4,7 @@
 \usepackage{amssymb}
 \usepackage{amsmath}
 \usepackage{listings}
+\usepackage[dvipsnames]{xcolor}
 \usepackage{pgf,tikz}
 \usepackage{algorithm}
 \usepackage{algpseudocode}
@@ -12,6 +13,20 @@
 \usepackage{multicol}
 \usepackage{btreecursor}
 \usepackage{lstcoq}
+
+\lstset{language=C,
+                basicstyle=\ttfamily,
+                keywordstyle=\color{RedViolet}\ttfamily,
+                stringstyle=\color{Violet}\ttfamily,
+                commentstyle=\color{MidnightBlue}\ttfamily,
+                morecomment=[l][\color{magenta}]{\#},
+                morekeywords={Bool, Key, size_t},
+                emph={%  
+                  Relation_T, Cursor_T, BtNode_T, Relation, Cursor, BtNode, Entry, Child_or_Record%
+                },emphstyle={\color{Maroon}}
+}
+
+\renewcommand\labelitemi{$\bullet$}
 
 \begin{document}
 \setcounter{page}{0}
@@ -38,7 +53,12 @@
 \end{center}
 \vfill
 \begin{abstract}
-  TODO:abstract
+  The DeepDB project~\cite{deepdb} aims to define, specify and verify a high-performance concurrent in-memory database system.
+  Based on MassTree~\cite{masstree}, it uses B+Trees, a well-studied data structure.
+  Our sequential B+Trees library uses cursors, introduced in SQLite~\cite{sqlite}.
+  Such cursors reduce the complexity of operations when dealing with partially sorted data.
+  We define a Coq formal model for such trees, then use it to specify and prove the correctness of the C implementation using VST~\cite{vst}.
+  
 \keywords{B+Trees, Cursor, VST, Verification, Coq, C}
 \end{abstract}
 \vfill
@@ -50,7 +70,8 @@
 \def\todo#1{{\color{red}#1}}
 \def\btrep{\texttt{btnode\_rep}}
 
-\include{figures.tex}
+%\include{figures.tex}
+\include{figures}
 
 \section{Introduction}
 \label{sec:intro}
@@ -75,10 +96,6 @@
 \section{Bugs of the original C implementation}
 \label{sec:bugs}
 \input{bugs.tex}
-
-\section{Correctness of the Formal Model}
-\label{sec:spec}
-\input{spec.tex}
 
 \section{Conclusion and Future Works}
 \label{sec:conclusion}

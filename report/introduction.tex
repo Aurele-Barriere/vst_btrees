@@ -26,11 +26,10 @@
 
 % Results
   \todo{results?}
-  The verification of the B+Tree Library has allowed us to find several bugs in the original implementation.
+  The verification of the B+Tree Library has allowed us to find several bugs in the original implementation (see Section~\ref{sec:bugs}).
 
 % Outline
-  We first present the B+Tree Structure with cursors and its implementation.
-  We then define an equivalent formal model, that is used for the verification.
-  We then present the VST verification of our implementation.
-  Finally, we prove that the formal model (proved to be equivalent to the C program), complies with the abstract specification.\todo{not done yet}
-  % add section references
+  We first present the B+Tree Structure with cursors and its implementation (Section~\ref{sec:btrees})
+  We then define an equivalent formal model, that is used for the verification (Section~\ref{sec:model}).
+  We then present in Section~\ref{sec:verif} the VST verification of our implementation.
+  We present in Section~\ref{sec:bugs} some of the bugs we encountered and fixed while verifying the library.

@@ -1,4 +1,4 @@
-\include{figures}
+%\include{figures}
 \subsection{B+Trees}
 % Context
 The first part of our work consisted in modifying a \btrees\ with cursors library.
@@ -6,12 +6,12 @@ The first part of our work consisted in modifying a \btrees\ with cursors librar
 \btrees\ are high-performance in-memory data structures. \btrees\ are ordered and self-balanced.
 This allows for fast access to the data (located at the leaves), as it suffices to go down the tree using the keys in the nodes to find the next one.
 \btrees\ have been well studied~\cite{dbms} and implemented numerous times. % They are used in \todo{SQL,SQLite,...}.
-A \btree\ example can be seen \textbf{Fig.}~\ref{fig:bt}.
+A \btree\ example can be seen \textbf{Fig.}~\ref{bt}.
 The keys in the leaves point to a record (indicated in the figure by a * next to the key).
 The fanout value in this example is 4 (the maximum number of keys in each node).
 Every intern node has $n+1$ children, where $n$ is its number of keys.
-Traditionnally, \btrees\ implement cross-links between leaves, meaning that each leaf node points to the previous and the next one.
-This allows for range queries as one can always find te next record.
+Traditionally, \btrees\ implement cross-links between leaves, meaning that each leaf node points to the previous and the next one.
+This allows for range queries as one can always find the next record.
 However, because our implementation is using cursors (see below), these links are not needed.
 
 % Operations
@@ -26,12 +26,12 @@ This algorithm keeps the tree balanced.
 The complexity of inserting a new record is $\mathcal{O}(log_{f}(n))$, where $f$ is the Fanout of the tree and $n$ the number of records.
 Indeed, the number of operations (key comparisons and node splittings) is linear in the depth of the tree.
 
-For instance, a record with the key 4 in \textbf{Fig.}~\ref{fig:bt} should be inserted in the first leaf node (containing keys 0, 1, 2 and 3).
+For instance, a record with the key 4 in \textbf{Fig.}~\ref{bt} should be inserted in the first leaf node (containing keys 0, 1, 2 and 3).
 Because this node is full, it should be split into two: one containing 0, 1, 2, and the other containing keys 3 and 4.
 Then, key 2 should be inserted into the parent node (with keys 5, 9, 12, 15).
 Because this node is full too, it should be split.
 Because intern nodes do no contain records, the middle key can simply be pushed to the root without being copied.
-The resulting \btree, after insertion, can be seen \textbf{Fig}~\ref{fig:btinsert}.
+The resulting \btree, after insertion, can be seen \textbf{Fig}~\ref{btinsert}.
 
 \beforeinsert
 \afterinsert
@@ -53,7 +53,7 @@ Otherwise, it should go up to the node's parent before going down again. If the 
 A Cursor is implemented as an array of pairs. Each pair contains a pointer to a node and an index for that node.
 The first node of the cursor should be the root of the \btree.
 Then the following nodes describe a path from the root to an entry in a leaf node.
-An example of cursor can be found in \textbf{Fig.}~\ref{fig:cursor}.
+An example of cursor can be found in \textbf{Fig.}~\ref{cursor}.
 A cursor's length should always be equal to the depth of the \btree\ it refers to, thus pointing to a record.
 To the best of our knowledge, cursors were only used in the \btrees\ implementation of SQLite~\cite{sqlite}.
 
@@ -64,22 +64,22 @@ With a cursor, basic functions (insertion, accessing a record) do not start at t
 For instance, when accessing the record for a given key $k$, if $k$ is in the same leaf node as the cursor, then we can fetch the associated record in constant-time.
 Whenever $k$ is not in the same leaf node, we need to go up in the \btree\ using the previous levels of the cursors, until we reach a parent node of the desired key.
 We can then go down the \btree\ until $k$ is found.
-For instance, if we search for key 14 in \textbf{Fig.}~\ref{fig:cursor}, we can first see that 14 is not in the leaf node pointed to by the cursor (containing only keys from 5 to 8).
+For instance, if we search for key 14 in \textbf{Fig.}~\ref{cursor}, we can first see that 14 is not in the leaf node pointed to by the cursor (containing only keys from 5 to 8).
 We then go up in the \btree, using the cursor, to the intern node containing 5, 9, 12 and 15.
 Because it contains keys lesser and greater than 14, we know that this node is a parent node for 14.
 Finally, we go down to the fourth child, containing keys 12 and 14, and we can get the desired record.
 This new algorithm is still $\mathcal{O}(log_{f}(n))$ in the worst-case (if we need to go up to the root of the tree, then go down to the leaves),
 but is faster when looking for close keys.
-In particular, accessing the record of each key sequentially has amortized constant time complexity\todo{ref tosin's thesis}.
+In particular, accessing the record of each key sequentially has amortized constant time complexity~\cite{tosin}.
 
-Inserting a new record has a similar complexity (faster when the cursor is already close to the key to insert).
+Inserting a new record has a similar complexity.
 To perform range queries, we need to introduce a new function, \textit{movetonext}, that moves the cursor to the next record in a \btree.
 
 \subsection{Implementation}
 We modified DeepDB's implementation of \btrees\ with cursors. The C types are the following:
 
 \begin{multicols}{2}
-\lstinputlisting[language=C]{types.c}
+\lstinputlisting{types.c}
 \end{multicols}
 
 A node contains an array of entries.
@@ -89,7 +89,7 @@ Nodes also contain booleans that indicate if the node is the first or the last o
 This is used to speed up some functions.
 Finally, a cursor has an array of ancestors (the nodes, from the root to the leaf node pointed to) and an array of indexes locating the next child at each level.
 
-This library contains 37 functions, all of which will be verified in section\todo{ref section}.
+This library contains 37 functions, all of which are verified in VST (see Section~\ref{sec:verif}).\todo{all?}
 Deletion hasn't been implemented yet.
 The functions that can be used by a client of the library include:
 \begin{itemize}
@@ -100,7 +100,7 @@ The functions that can be used by a client of the library include:
 \item \lstinline{const void* RL_GetRecord(Cursor_T cursor);}  returns the record pointed to by a cursor.
 \item \lstinline{void RL_PutRecord(Cursor_T cursor, Key key, const void* record);}  inserts a new record.
 \item \lstinline{Bool RL_MoveToKey(Cursor_T cursor, Key key);}  moves the cursor to a given key.
-\item \lstinline{Bool RL_MoveToFirst(Cursor_T btCursor);}  moves the cursor to te first key.
+\item \lstinline{Bool RL_MoveToFirst(Cursor_T btCursor);}  moves the cursor to the first key.
 \item \lstinline{void RL_MoveToNext(Cursor_T btCursor);}  moves the cursor to the next position.
 \item \lstinline{void RL_MoveToPrevious(Cursor_T btCursor);}  moves the cursor to the previous position.
 \item \lstinline{Bool RL_IsEmpty(Cursor_T btCursor);}  returns true if the \btree\ of the cursor is empty.

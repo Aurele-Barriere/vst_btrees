@@ -1,7 +1,7 @@
 Working on the verification of the \btrees\ library has allowed us to find and fix some bugs.
 This demonstrates the benefits of formal verification: even though the library originally came with numerous tests, some bugs were only found when working with VST.
 
-\paragraph{Wrong Array Access} Originally, the library included a function, \texttt{findChildIndex}.
+\paragraph{Wrong Array Access} Originally, the library included a function, \lstinline{findChildIndex}.
 Given a key and a sorted list of entries, this simple function would return the index at which the key should be inserted.
 It was used to go down the tree or insert a new key and record.
 Because that function could be called on intern nodes, it could return $-1$, if the key was strictly lesser than any key in the entry list.
@@ -9,33 +9,36 @@ When going down the tree, it would mean that the next node to consider was the $
 
 However, that function was also called on leaf nodes, that do not have a $ptr_0$.
 Then, in the insertion function, to check if the key was already inside the relation, we could see the following line for leaf nodes:
-\texttt{if (node->entries[targetIdx].key == key)}, where \texttt{targetIdx} was the return value of \texttt{findChildIndex}.
+\begin{lstlisting}
+if (node->entries[targetIdx].key == key)
+\end{lstlisting}
+where \lstinline{targetIdx} was the return value of \lstinline{findChildIndex}.
 This means that the array could sometimes be accessed at index -1.
 
-We fixed this issue by implementing another function \texttt{findRecordIndex} used on leaf nodes, which is formally proved to return a positive number.
-Another substantial difference between \texttt{findChildIndex} and \texttt{findRecordIndex} is that \todo{inclusive, exclusive. Because of the spec and the def}.
+We fixed this issue by implementing another function \lstinline{findRecordIndex} used on leaf nodes, which is formally proved to return a positive number.
+Another substantial difference between \lstinline{findChildIndex} and \lstinline{findRecordIndex} is that \todo{inclusive, exclusive. Because of the spec and the def}.
 
 \paragraph{Constructing Cursors for a New Key}
 Another issue arose when building a new cursor for a key that wasn't already in the \btree.
 According to the formal specification, doing so should create a cursor that points just before the next key in the \btree.
-This means in particular that building such a cursor, then using the \texttt{GetRecord} function should return the record of the next key (if any).
+This means in particular that building such a cursor, then using the \lstinline{GetRecord} function should return the record of the next key (if any).
 
 However, in the original implementation, this wasn't enforced.
-Indeed, if the built cursor was at the end of a leaf node, the \texttt{GetRecord} function would access the last record of this node, instead of moving to the next leaf node.
+Indeed, if the built cursor was at the end of a leaf node, the \lstinline{GetRecord} function would access the last record of this node, instead of moving to the next leaf node.
 \todo{example}
 
 This was fixed by introducing equivalent positions for the cursor in a \btree.
 Informally, a cursor pointing at the end of a leaf node is equivalent to the one pointing at the beginning of the next leaf node.
 Previously, there was no difference between pointing at the last key of a node and after this key.
-This change require the \texttt{MoveToNext} function to move to the next position twice if it was at the end of a node.
-This isn't an issue for the complexity, as one of these moves is guaranteed to be constant-time.\todo{better explanation?}
+This change requires the \lstinline{MoveToNext} function to move to the next position twice if the cursor was pointing at the end of a leaf node.
+This isn't an issue for the complexity, as one of these moves is guaranteed to be constant-time.
 
 \paragraph{Splitting Nodes in the Middle}
 The original implementation wasn't splitting intern nodes exactly in the middle if the Fanout value was even.
 This does not affect the correctness of the \btree\ (which is still sorted and balanced) but can lead to a bigger depth on average, thus increasing the complexity of each functions.
 
 \paragraph{Reducing complexity}
-The original implementation of the \texttt{MoveToKey} function used to start from the root of the \btree, thus not exploiting the current position of the cursor. This was modified.
+The original implementation of the \lstinline{MoveToKey} function used to start from the root of the \btree, thus not exploiting the current position of the cursor. This was modified.
 
 \paragraph{Structure Changes}
 Working on the verification gave us the opportunity to clarify the entire structure of the implementation.
@@ -45,7 +48,7 @@ Overall, more than 70\% of the original library was rewritten.
 \paragraph{Other changes for the verification}
 Other changes were made to the original library to make verification possible.
 For instance, VST doesn't allow to verify an assignment where the type is a user-defined structure. \todo{why?}
-We had to replace each entry copy (in the \texttt{splitnode} function for instance) with copies of each fields, in order to prove the correctness.
+We had to replace each entry copy (in the \lstinline{splitnode} function for instance) with copies of each fields, in order to prove the correctness.
 
-\paragraph{Wrong function call} The implementation of \texttt{moveToPrevious} used to call \texttt{moveToFirst} instead of \texttt{movetToLast}, meaning that the cursor would be moved several positions backward.
+\paragraph{Wrong function call} The implementation of \lstinline{moveToPrevious} used to call \lstinline{moveToFirst} instead of \lstinline{movetToLast}, meaning that the cursor would be moved several positions backward.
 Because this function wasn't tested, this simple bug was only found when doing the verification.

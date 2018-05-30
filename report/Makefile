@@ -1,6 +1,6 @@
 all: report.pdf
 
-report.pdf: btreecursor.sty types.c lstcoq.sty report.tex figures.tex introduction.tex related.tex btrees.tex model.tex verif.tex bugs.tex spec.tex conclusion.tex ../bib/btrees.bib
+report.pdf: btreecursor.sty types.c lstcoq.sty report.tex figures.tex introduction.tex related.tex btrees.tex model.tex verif.tex bugs.tex conclusion.tex ../bib/btrees.bib
 	pdflatex report.tex
 	bibtex report.aux
 	pdflatex report.tex
