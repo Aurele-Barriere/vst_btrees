@@ -36,11 +36,16 @@ Definition relation (X:Type): Type := node X * X.  (* root and address *)
 
 % Types explanation
 \paragraph{Types}\textbf{Fig.}~\ref{coqtypes} presents the Coq Types for \btrees, cursors and relations. \todo{update for dependent relation type}
-These types are parametrized by a type \texttt{X}, that can be either \texttt{val} or \texttt{unit}.
-Using \texttt{val} allows to add the C address of each node, record or relation directly into the formal type.\todo{why?}
 We can see that entries have a key, and either a record (typed \texttt{V}) or a child (typed \texttt{node X}).
 Nodes have three booleans, representing the \texttt{isLeaf}, \texttt{First} and \texttt{Last} of the C code.
 The $ptr_0$ of a node is represented with an option, as Leaf Nodes don't have any.
+These types are parametrized by a type \texttt{X}, that can be either \texttt{val} or \texttt{unit}.
+Using \texttt{val} allows to add the C address of each node, record or relation directly into the formal type.
+Usually in VST proofs, the address of a structure is not part of the formal model, but given as an argument to a representation function.
+Indeed, one might want to hide from the formal specifications everything that is not part of an abstract structure.
+However, because cursors hold pointers to the nodes, their representation function must know where each node of a relation is in the memory.
+These locations cannot be abstracted without losing the possibility of representing several trees and cursors in the memory.
+The addresses can then be included directly into each node by using \texttt{node val}, and an user can still reason about abstract \btrees\ wit \texttt{btnode unit}.
 
 A cursor is implemented in Coq as a list of nodes and indexes.
 This corresponds to the arrays found in the C code. The list starts at the root and its head is the current node and index.

@@ -30,7 +30,7 @@ Indeed, if the built cursor was at the end of a leaf node, the \lstinline{GetRec
 This was fixed by introducing equivalent positions for the cursor in a \btree.
 Informally, a cursor pointing at the end of a leaf node is equivalent to the one pointing at the beginning of the next leaf node.
 Previously, there was no difference between pointing at the last key of a node and after this key.
-This change requires the \lstinline{MoveToNext} function to move to the next position twice if the cursor was pointing at the end of a leaf node.
+This change requires the \lstinline{MoveToNext} function to move to the next position twice if the cursor is pointing at the end of a leaf node.
 This isn't an issue for the complexity, as one of these moves is guaranteed to be constant-time.
 
 \paragraph{Splitting Nodes in the Middle}
@@ -42,7 +42,7 @@ The original implementation of the \lstinline{MoveToKey} function used to start 
 
 \paragraph{Structure Changes}
 Working on the verification gave us the opportunity to clarify the entire structure of the implementation.
-We changed the types of \btrees\ to remove superfluous field. We factorized some functions. We clarified the notion of invalid cursor.
+We changed the types of \btrees\ to remove superfluous fields. We factorized some functions. We clarified the notion of invalid cursor.
 Overall, more than 70\% of the original library was rewritten.
 
 \paragraph{Other changes for the verification}

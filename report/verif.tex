@@ -20,22 +20,26 @@ The correctness of a program is represented by a Hoare Triple $\{P\}~c~\{Q\}$, w
 Hoare Logic's simple rules allow to derive Hoare Triples. For instance, the composition rule states that, if $\{P\}~c_1~\{Q\}$ and $\{Q\}~c_2~\{R\}$ hold, then $\{P\}~c_1;c_2~\{R\}$ holds.
 
 % SEP
-Separation Logic is an extension of Hoare Logic. Correctness is still modeled with a Triple $\{P\}~c~\{Q\}$. However, the formulas for pre and postconditions are augmented with a new operator $*$.
+Separation Logic is an extension of Hoare Logic. Correctness is still modeled with a Triple $\{P\}~c~\{Q\}$. However, the formulas for preconditions and postconditions are augmented with a new operator $*$.
 Informally, $P_1~*~P_2$ means that the heap (or memory) can be split into two disjoint parts, one where $P_1$ holds, and another where $P_2$ holds.
 This operator is convenient when dealing with multiples objects in the memory.
 For instance, if $\btrep(n,p)$ means that the node $n$ is represented in the memory at address $p$, then $\btrep(n_1,p_1)*\btrep(n_2,p_2)$ means that the two nodes are in the heap, at different addresses (in particular, $p_1\neq p_2$).
 Without this operator, one should add many propositions of the form $p_1\neq p_2$ when describing multiple objects in the heap, making the proof harder.
 Separation Logic also defines the \textit{magic wand} operator $-*$. Informally, $P~-*~Q$ means that if the heap is extended with a disjoint part where $P$ holds, then $Q$ holds on the total heap.
-This is particularly useful to extract information from a separation construct. \todo{example: refer to the sub-node\_rep lemma}
+This is particularly useful to extract information from a separation construct. \todo{example: refer to the subnode\_rep lemma}
+
+\def\prop{\lstinline[language=Coq]{PROP}}
+\def\local{\lstinline[language=Coq]{LOCAL}}
+\def\sep{\lstinline[language=Coq]{SEP}}
 
 \subsubsection{Function Specification in Verifiable C}
-In Verifiable C, a pre or postcondition formula consists in three sets: PROP, LOCAL and SEP.
-PROP contains assertions of type \texttt{Prop} in Coq.
-LOCAL binds local variables to values. For instance, one could write \texttt{temp \_a (Vint(Int.repr 0))} to state that local variable \texttt{a} is bound to 0.
-SEP contains spatial assertions in separation logic. Writing \texttt{P;Q} in SEP means that $\texttt{P}~*~\texttt{Q}$ holds.
+In Verifiable C, a precondition or postcondition formula consists in three sets: \prop, \local\ and \sep.
+\prop\ contains assertions of type \texttt{Prop} in Coq.
+\local\ binds local variables to values. For instance, one could write \texttt{temp \_a (Vint(Int.repr 0))} to state that local variable \texttt{a} is bound to 0.
+\sep\ contains spatial assertions in separation logic. Writing \texttt{P;Q} in \sep\ means that $\texttt{P}~*~\texttt{Q}$ holds.
 \textbf{Fig.}~\ref{spec} shows one of our specifications.
 The precondition contains several requirements, like \texttt{next\_node c (get\_root r) = Some n}, meaning that \texttt{n} is the node pointed to by the partial cursor.
-Comparing the SEP clauses of the precondition and postcondition allows to understand what happens in the memory.
+Comparing the \sep\ clauses of the precondition and postcondition allows to understand what happens in the memory.
 Here, the relation is unchanged, while the cursor is replaced with the one returned by the Coq function \texttt{moveToFirst} (see \textbf{Fig.}~\ref{movetofirst}).
 
 \begin{figure}
@@ -64,7 +68,7 @@ Definition moveToFirst_spec : ident * funspec :=
 We first define the functions \texttt{btnode\_rep}, \texttt{cursor\_rep} and \texttt{relation\_rep} that are used to specify that each structure is represented in the memory.
 They use a combination of \texttt{data\_at} and \texttt{malloc\_token} defined by VST.
 \textbf{Fig.}~\ref{btnoderep} shows one of these definitions.\todo{move that to annex!}
-We then prove multiple lemmas about these representations. For instance, if a node is represented in the memory at some address $p$, then $p$ is the content of a valid pointer.
+We then prove multiple lemmas about these representations. For instance, if a node is represented in the memory at some address $p$, then $p$ is a valid pointer.
 
 % locals
 We then define properties of the \btrees\ and cursors that are required to prove correctness.
@@ -76,14 +80,14 @@ We then prove multiple lemmas to help us reason with the memory representations 
 For instance, the function \texttt{currNode} returns a pointer to the last node of a cursor.
 In the verification proof, we need to access this pointer by proving that the current node is represented somewhere in the memory.
 However, the function precondition only states that the root node is represented in the memory.
-To solve this, we first need to prove that the current node is a sub-node of the root.
+To solve this, we first need to prove that the current node is a subnode of the root.
 This is done by proving the following theorem:
 \begin{lstlisting}[language=Coq]
   forall X (c:cursor X) r,
   complete_cursor_correct_rel c r -> subnode (currNode c r) (get_root r)
 \end{lstlisting}
 
-We then need to prove that, if a node $root$ is represented in the heap, and some other node $n$ is a sub-node of $root$, then $n$ is also represented in the heap.
+We then need to prove that, if a node $root$ is represented in the heap, and some other node $n$ is a subnode of $root$, then $n$ is also represented in the heap.
 This is true because the function \btrep\ calls itself recursively on each children (see \textbf{Fig.}~\ref{btnoderep}).
 However, because \btrep\ is a separating clause, we can't simply use an implication. We need to rewrite it as a separation conjunction.
 This is done by proving the following theorem, \textbf{subnode\_rep}:
@@ -99,8 +103,8 @@ This is done by proving the following theorem, \textbf{subnode\_rep}:
 After proving many such theorems and writing every function specification (see \textbf{Fig.}~\ref{spec}), we need to prove the correctness of each function.
 These proofs consists in proving a Separation Triple $\{P\}~c~\{Q\}$, where $P$ and $Q$ are the precondition and postcondition defined in the specification, and $c$ is the Clight function.
 Each triple is proved by moving forward through $c$.
-For instance, if the first instruction of $c$ is an assignment \texttt{a:=0}, using the \texttt{forward} tactic of VST will turn the proof goal $\{P\}~\texttt{a=0};~c'~\{Q\}$ into $\{P'\}~c'~\{Q\}$,
-where $P'$ is $P$ with the new LOCAL binding: \texttt{temp \_a (Vint(Int.repr 0))}.
+For instance, if the first instruction of $c$ is an assignment \texttt{a:=0}, using the \lstinline[language=Coq]{forward} tactic of VST will turn the proof goal $\{P\}~\texttt{a=0};~c'~\{Q\}$ into $\{P'\}~c'~\{Q\}$,
+where $P'$ is $P$ with the new \local\ binding: \texttt{temp \_a (Vint(Int.repr 0))}.
 Occasionally, other goals have to be proven.
 Every time an array is accessed, we must prove that the index is in the right range.
 Every time a pointer is dereferenced, we must prove that it is valid.

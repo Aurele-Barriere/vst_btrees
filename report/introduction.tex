@@ -20,8 +20,8 @@
 
 % Contribution
   This paper focuses on the implementation, specification and verification of a B+Trees with Cursors Library.
-  As of today, this library only deal with sequential operations.
-  Ultimately, our data structure should allow a concurrent usage, but we believe that formal verification of a sequential program is a mandatory first step towards the verification of a concurrent one.
+  As of today, this library only deals with sequential operations.
+  Ideally, our data structure should allow a concurrent usage, but we believe that formal verification of a sequential program is a mandatory first step towards the verification of a concurrent one.
   Given a formal specification of an abstract key-value data structure with cursors and a first version of a B+Tree with cursors implementation, the work presented here consisted in rewriting the C code to comply with the specification, then prove it correct using VST.
 
 % Results
