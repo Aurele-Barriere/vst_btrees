@@ -35,3 +35,83 @@ with le_iter_sepcon (le:listentry val):mpred :=
 \caption{Representing a \btree\ node in the memory}
 \label{btnoderep}
 \end{figure}
+
+\newpage
+\subsection{A VST proof}
+\label{subsec:proof}
+\begin{figure}
+  \begin{lstlisting}
+static BtNode* createNewNode(Bool isLeaf, Bool First, Bool Last) {
+    BtNode* newNode;
+    newNode = (BtNode*) surely_malloc(sizeof (BtNode));
+    if (newNode == NULL) {
+      return NULL;
+    }
+    newNode->numKeys = 0;
+    newNode->isLeaf = isLeaf;
+    newNode->First = First;
+    newNode->Last = Last;
+    newNode->ptr0 = NULL;
+    return newNode;
+}
+  \end{lstlisting}
+  \caption{The C code for creating a new node}
+\end{figure}
+
+\begin{figure}
+  \begin{lstlisting}[language=Coq]
+Definition empty_node (b:bool) (F:bool) (L:bool) (p:val):node val := (btnode val) None (nil val) b F L p.
+    
+Definition createNewNode_spec : ident * funspec :=
+  DECLARE _createNewNode
+  WITH isLeaf:bool, First:bool, Last:bool
+  PRE [ _isLeaf OF tint, _First OF tint, _Last OF tint ]
+    PROP ()
+    LOCAL (temp _isLeaf (Val.of_bool isLeaf);
+         temp _First (Val.of_bool First);
+         temp _Last (Val.of_bool Last))
+    SEP ()
+  POST [ tptr tbtnode ]
+    EX p:val, PROP ()
+    LOCAL (temp ret_temp p)
+    SEP (btnode_rep (empty_node isLeaf First Last p)).
+  \end{lstlisting}
+  \caption{Creating a new node in the formal model and specification of the C function}
+\end{figure}
+
+\begin{figure}
+  \begin{lstlisting}[language=Coq]
+Lemma body_createNewNode: semax_body Vprog Gprog f_createNewNode createNewNode_spec.
+Proof.
+  start_function.
+  forward_call (tbtnode).       (* t'1=malloc(sizeof tbtnode) *)
+  - split. simpl. rep_omega.
+    split; auto.
+  - Intros vret.
+    forward_if (PROP (vret<>nullval)
+    LOCAL (temp _newNode vret; temp _isLeaf (Val.of_bool isLeaf);
+    temp _First (Val.of_bool First); temp _Last (Val.of_bool Last))
+    SEP (malloc_token Tsh tbtnode vret * data_at_ Tsh tbtnode vret; emp)).
+    + forward.                  (* return null *)
+    + forward. entailer!.
+    + Intros. 
+      forward.                  (* newNode->numKeys = 0 *)
+      unfold default_val. simpl.
+      forward.                  (* newnode->isLeaf=isLeaf *)
+      forward.                  (* newnode->First=First *)
+      forward.                  (* newnode->Last=Last *)
+      forward.                  (* newnode->ptr0=null *)
+      forward.                  (* return newnode *)
+      Exists vret. entailer!.
+      Exists (list_repeat 15 (Vundef, (inl Vundef):(val+val))).
+      simpl. cancel.
+      apply derives_refl.
+Qed.
+  \end{lstlisting}
+  \caption{Proving the function correct with VST}
+\end{figure}
+
+    
+
+    
+    
