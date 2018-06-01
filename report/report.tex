@@ -53,13 +53,14 @@
 \end{center}
 \vfill
 \begin{abstract}
-  The DeepDB project~\cite{deepdb} aims to define, specify and verify a high-performance concurrent in-memory database system.
-  Based on MassTree~\cite{masstree}, it uses B+Trees, a well-studied data structure.
-  Our sequential B+Trees library uses cursors, introduced in SQLite~\cite{sqlite}.
+  The DeepDB project aims to define, specify and verify a high-performance concurrent in-memory database system.
+  Based on MassTree, it uses B+Trees, a well-studied key-value data structure.
+  Our sequential B+Trees library uses cursors, introduced in the database engine SQLite.
   Such cursors reduce the complexity of operations when dealing with partially sorted data.
-  We define a Coq formal model for such trees, then use it to specify and prove the correctness of the C implementation using VST~\cite{vst}.
+  We define a Coq formal model for such trees, then use it to specify and prove the correctness of the C implementation using the Verified Software Toolchain.
+  {\color{red}Add results?}
   
-\keywords{B+Trees, Cursor, VST, Verification, Coq, C}
+\keywords{B+Tree, Cursor, VST, Verification, Coq, C}
 \end{abstract}
 \vfill
 \newpage
