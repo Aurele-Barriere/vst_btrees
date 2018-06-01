@@ -67,7 +67,7 @@ Definition moveToFirst_spec : ident * funspec :=
 % rep functions
 We first define the functions \texttt{btnode\_rep}, \texttt{cursor\_rep} and \texttt{relation\_rep} that are used to specify that each structure is represented in the memory.
 They use a combination of \texttt{data\_at} and \texttt{malloc\_token} defined by VST.
-\textbf{Fig.}~\ref{btnoderep} shows one of these definitions.\todo{move that to annex!}
+\textbf{Fig.}~\ref{btnoderep} (in appendix) shows one of these definitions.
 We then prove multiple lemmas about these representations. For instance, if a node is represented in the memory at some address $p$, then $p$ is a valid pointer.
 
 % locals
@@ -115,41 +115,3 @@ Such goals (called entailments) are proved using separation logic rules implemen
 
 \subsection{Results}
 \todo{TODO: what has been proved? what's left?}
-
-
-
-\begin{figure}
-\begin{lstlisting}[language=Coq]
-Fixpoint entry_rep (e:entry val): mpred:=
-  match e with
-  | keychild _ n => btnode_rep n
-  | keyval _ v x => value_rep v x
-  end
-with btnode_rep (n:node val):mpred :=
-  match n with btnode ptr0 le b First Last pn =>
-  EX ent_end:list(val * (val + val)),
-  malloc_token Tsh tbtnode pn *
-  data_at Tsh tbtnode (Val.of_bool b,(
-                       Val.of_bool First,(
-                       Val.of_bool Last,(
-                       Vint(Int.repr (Z.of_nat (numKeys n))),(
-                       match ptr0 with
-                       | None => nullval
-                       | Some n' => getval n'
-                       end,(
-                       le_to_list le ++ ent_end)))))) pn *
-  match ptr0 with
-  | None => emp
-  | Some n' => btnode_rep n'
-  end *
-  le_iter_sepcon le
-  end
-with le_iter_sepcon (le:listentry val):mpred :=
-  match le with
-  | nil => emp
-  | cons e le' => entry_rep e * le_iter_sepcon le'
-  end.
-\end{lstlisting}
-\caption{Representing a \btree\ node in the memory}
-\label{btnoderep}
-\end{figure}
