@@ -4,7 +4,7 @@ This demonstrates the benefits of formal verification: even though the library o
 \paragraph{Wrong Array Access} Originally, the library included a function, \lstinline{findChildIndex}.
 Given a key and a sorted list of entries, this simple function would return the index at which the key should be inserted.
 It was used to go down the tree or insert a new key and record.
-Because that function could be called on intern nodes, it could return $-1$, if the key was strictly lesser than any key in the entry list.
+Because that function could be called on internal nodes, it could return $-1$, if the key was strictly less than any key in the entry list.
 When going down the tree, it would mean that the next node to consider was the $ptr_0$ of the current node.
 
 However, that function was also called on leaf nodes, that do not have a $ptr_0$.
@@ -34,7 +34,7 @@ This change requires the \lstinline{MoveToNext} function to move to the next pos
 This isn't an issue for the complexity, as one of these moves is guaranteed to be constant-time.
 
 \paragraph{Splitting Nodes in the Middle}
-The original implementation wasn't splitting intern nodes exactly in the middle if the Fanout value was even.
+The original implementation wasn't splitting internal nodes exactly in the middle if the fanout value was even.
 This does not affect the correctness of the \btree\ (which is still sorted and balanced) but can lead to a bigger depth on average, thus increasing the complexity of each functions.
 
 \paragraph{Reducing complexity}

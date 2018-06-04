@@ -1,11 +1,11 @@
 \subsection{Using the Verified Software Toolchain}
 % VC
 The Verified Software Toolchain uses Verifiable C to prove correctness of C programs.
-Verifiable C is made of a language and a program logic.
+Verifiable C consists of a language and a program logic.
 The language of Verifiable C is a subset of CompCert's Clight~\cite{clight}.
 Clight was introduced as an intermediate language in CompCert, where all expressions are pure and side-effect free.
 The program logic of Verifiable C is a higher-order Separation Logic~\cite{sep} (an extension of Hoare Logic~\cite{hoare}).
-VST includes many tools, proved theorems and Coq tactics to assist the user in writing a backward\todo{?} separation logic proof in Coq that relates Clight's semantics (as defined in CompCert) and a formal specification.
+VST includes many tools, proved theorems and Coq tactics to assist the user in writing a forward separation logic proof in Coq that relates Clight's semantics (as defined in CompCert) and a formal specification.
 
 % work flow 
 When proving the correctness of a C program, a VST user should first generate an equivalent Clight program.
@@ -13,26 +13,26 @@ CompCert includes the \texttt{clightgen} tool to do so. Then, the user should wr
 Finally, the user can prove the correctness of each function separately.
 %The Coq goal starts with a Separation Triple (see below).
 
-\subsubsection{Verifiable C's Separation Logic}
+\subsubsection{Verifiable C's Separation Logic.}
 % Hoare
-Hoare Logic has been extensively studied and used in the past years.
-The correctness of a program is represented by a Hoare Triple $\{P\}~c~\{Q\}$, where $P$ and $Q$ are formulas (respectively called precondition and postcondiction), and $c$ is a program.
-Hoare Logic's simple rules allow to derive Hoare Triples. For instance, the composition rule states that, if $\{P\}~c_1~\{Q\}$ and $\{Q\}~c_2~\{R\}$ hold, then $\{P\}~c_1;c_2~\{R\}$ holds.
+Hoare Logic has been extensively studied and used.
+The correctness of a program is represented by a Hoare triple $\{P\}~c~\{Q\}$, where $P$ and $Q$ are formulas (respectively called precondition and postcondiction), and $c$ is a program.
+Hoare Logic's simple rules allow to derive Hoare triples. For instance, the composition rule states that, if $\{P\}~c_1~\{Q\}$ and $\{Q\}~c_2~\{R\}$ hold, then $\{P\}~c_1;c_2~\{R\}$ holds.
 
 % SEP
-Separation Logic is an extension of Hoare Logic. Correctness is still modeled with a Triple $\{P\}~c~\{Q\}$. However, the formulas for preconditions and postconditions are augmented with a new operator $*$.
+Separation Logic is an extension of Hoare Logic. Correctness is still modeled with a triple $\{P\}~c~\{Q\}$. However, the formulas for preconditions and postconditions are augmented with a new operator $*$.
 Informally, $P_1~*~P_2$ means that the heap (or memory) can be split into two disjoint parts, one where $P_1$ holds, and another where $P_2$ holds.
 This operator is convenient when dealing with multiples objects in the memory.
 For instance, if $\btrep(n,p)$ means that the node $n$ is represented in the memory at address $p$, then $\btrep(n_1,p_1)*\btrep(n_2,p_2)$ means that the two nodes are in the heap, at different addresses (in particular, $p_1\neq p_2$).
-Without this operator, one should add many propositions of the form $p_1\neq p_2$ when describing multiple objects in the heap, making the proof harder.
-Separation Logic also defines the \textit{magic wand} operator $-*$. Informally, $P~-*~Q$ means that if the heap is extended with a disjoint part where $P$ holds, then $Q$ holds on the total heap.
+Without this operator, one would have to add many propositions of the form $p_1\neq p_2$ when describing multiple objects in the heap, making the proof harder.
+Separation Logic also defines the \textit{magic wand} operator $\wand$. Informally, $P~\wand~Q$ means that if the heap is extended with a disjoint part where $P$ holds, then $Q$ holds on the total heap.
 This is particularly useful to extract information from a separation construct. \todo{example: refer to the subnode\_rep lemma}
 
 \def\prop{\lstinline[language=Coq]{PROP}}
 \def\local{\lstinline[language=Coq]{LOCAL}}
 \def\sep{\lstinline[language=Coq]{SEP}}
 
-\subsubsection{Function Specification in Verifiable C}
+\subsubsection{Function Specification in Verifiable C.}
 In Verifiable C, a precondition or postcondition formula consists in three sets: \prop, \local\ and \sep.
 \prop\ contains assertions of type \texttt{Prop} in Coq.
 \local\ binds local variables to values. For instance, one could write \texttt{temp \_a (Vint(Int.repr 0))} to state that local variable \texttt{a} is bound to 0.
@@ -40,7 +40,7 @@ In Verifiable C, a precondition or postcondition formula consists in three sets:
 \textbf{Fig.}~\ref{spec} shows one of our specifications.
 The precondition contains several requirements, like \texttt{next\_node c (get\_root r) = Some n}, meaning that \texttt{n} is the node pointed to by the partial cursor.
 Comparing the \sep\ clauses of the precondition and postcondition allows to understand what happens in the memory.
-Here, the relation is unchanged, while the cursor is replaced with the one returned by the Coq function \texttt{moveToFirst} (see \textbf{Fig.}~\ref{movetofirst}).
+Here, the relation is unchanged, while the cursor is modified to represent the one returned by the Coq function \texttt{moveToFirst} (see \textbf{Fig.}~\ref{movetofirst}).
 
 \begin{figure}
 \begin{lstlisting}[language=Coq]
@@ -65,14 +65,14 @@ Definition moveToFirst_spec : ident * funspec :=
 
 \subsection{\btrees\ Verification}
 % rep functions
-We first define the functions \texttt{btnode\_rep}, \texttt{cursor\_rep} and \texttt{relation\_rep} that are used to specify that each structure is represented in the memory.
+We first define the functions \texttt{btnode\_rep}, \texttt{cursor\_rep} and \texttt{relation\_rep} that are used to specify how each structure is represented in memory.
 They use a combination of \texttt{data\_at} and \texttt{malloc\_token} defined by VST.
-\textbf{Fig.}~\ref{btnoderep} (in appendix) shows one of these definitions.
+\textbf{Fig.}~\ref{btnoderep} (in the appendix) shows one of these definitions.
 We then prove multiple lemmas about these representations. For instance, if a node is represented in the memory at some address $p$, then $p$ is a valid pointer.
 
 % locals
 We then define properties of the \btrees\ and cursors that are required to prove correctness.
-Such definitions include \texttt{partial\_cursor c r}, meaning that \texttt{c} is a correct cursor for relation \texttt{r} that stops at an intern node.
+Such definitions include \texttt{partial\_cursor c r}, meaning that \texttt{c} is a correct cursor for relation \texttt{r} that stops at an internal node.
 By correct, we mean that each node is the $n^{th}$ child of the previous node, where $n$ is the previous index.
 
 % subnode, subnode_rep
@@ -101,7 +101,7 @@ This is done by proving the following theorem, \textbf{subnode\_rep}:
 
 % body proofs
 After proving many such theorems and writing every function specification (see \textbf{Fig.}~\ref{spec}), we need to prove the correctness of each function.
-These proofs consists in proving a Separation Triple $\{P\}~c~\{Q\}$, where $P$ and $Q$ are the precondition and postcondition defined in the specification, and $c$ is the Clight function.
+These proofs consists in proving a Separation triple $\{P\}~c~\{Q\}$, where $P$ and $Q$ are the precondition and postcondition defined in the specification, and $c$ is the Clight function.
 Each triple is proved by moving forward through $c$.
 For instance, if the first instruction of $c$ is an assignment \texttt{a:=0}, using the \lstinline[language=Coq]{forward} tactic of VST will turn the proof goal $\{P\}~\texttt{a=0};~c'~\{Q\}$ into $\{P'\}~c'~\{Q\}$,
 where $P'$ is $P$ with the new \local\ binding: \texttt{temp \_a (Vint(Int.repr 0))}.

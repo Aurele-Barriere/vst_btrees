@@ -1,7 +1,9 @@
 % Main-Memory Database Systems
   With memory sizes increasing and prices dropping, the assumption that most of the values of a database system must reside on disk no longer holds.
   This resulted in the emergence of several \textit{Main Memory Database Systems}~\cite{mmdb}, where most (or all) of the data is in the memory.
-  As a result, file I/O is no longer a bottleneck for such systems.
+  %As a result, file I/O is no longer a bottleneck for such systems.
+  This leads to much faster database operations, as reading from the volatile memory is typically orders of magnitude faster than the disk, at the cost of a few changes in architecture design.
+  For instance, the size of memory blocks should be adapted to fit into cache lines instead of disk sectors.
   Examples include MassTree~\cite{masstree}, VoltDB~\cite{voltdb}, MemSQL~\cite{memsql}, Hekaton, SAP HANA and others.
 
 % MassTree
