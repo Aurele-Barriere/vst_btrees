@@ -5,8 +5,8 @@
 \usetikzlibrary{arrows}
 \usetikzlibrary{positioning,shapes,fit}
 \usepackage{graphicx}
-\usepackage{amssymb}
-\usepackage{amsmath}
+\usepackage{amsmath,amssymb,amsthm,textcomp}
+\usepackage{proof}
 \usepackage{listings}
 \usepackage{xcolor}
 \usepackage{pgf,tikz}
@@ -17,6 +17,12 @@
 \usepackage{multicol}
 \usepackage{btreecursor}
 \usepackage{lstcoq}
+
+\definecolor{spec}{HTML}{6F1616}
+\definecolor{prog}{HTML}{106235}
+\def\spec#1{{\color{spec}\textbf{#1}}}
+\def\prog#1{{\color{prog}\textbf{#1}}}
+
 
 \makeatletter
 \makeatother
@@ -40,6 +46,10 @@
   \end{frame}
 }
 
+\def\btree{B+Tree}
+\def\btrees{B+Trees}
+\def\todo#1{{\color{red}#1}}
+\def\btrep{\texttt{btnode\_rep}}
 
 \begin{document}
 \title[shorttitle]{VST Verification of B+Trees with Cursors}
@@ -72,6 +82,23 @@
 \section{Introduction}
 \begin{frame}{Introduction}
   % introduction to software verif
+  \begin{block}{DeepDB}
+    \begin{itemize}
+    \item Define, specify and verify a high-performance concurrent in-memory database system.
+    \item Based on MassTree, uses \btrees
+    \item C sequential library for \btrees\ with cursors
+    \item Coq abstract relation with cursors specification
+    \end{itemize}
+  \end{block}
+  \vfill
+  \begin{exampleblock}{Outline}
+    \begin{itemize}
+    \item Fix the C library
+    \item Define a Coq formal model for \btrees\ with cursors
+    \item Prove the correctness of the C library using VST
+    \end{itemize}
+  \end{exampleblock}
+      
 \end{frame}
 
 \begin{frame}{B+Trees}
@@ -124,13 +151,47 @@
   % complexity
 \end{frame}
 
-\section{VST}
-\begin{frame}{Hoare and Separation Logic}
-  % Hoare triples
+\newcommand{\hoare}[3]{\{\spec{$#1$}\}~\prog{$#2$}~\{\spec{$#3$}\}}
 
-  % Separation
-  % another slide for that one? * and -*
-  
+\section{VST}
+\begin{frame}{Hoare Logic}
+  \begin{block}{Hoare Logic}
+    \begin{itemize}
+    \item \spec{Specification} language
+    \item \prog{Program} language
+    \item Logic rules to prove \textbf{Hoare Triples}
+    \end{itemize}
+  \end{block}
+  \vfill
+  \begin{block}{Hoare Triple}
+    $$\{ \spec{$\phi$} \}\quad \prog{S} \quad\{ \spec{$\psi$} \}$$
+    \begin{center}
+      Precondition\quad Program\quad Postcondition
+    \end{center}
+  \end{block}
+  \vfill
+  \begin{exampleblock}{Hoare Triple's meaning}
+    Any terminating execution of \prog{S} from a state where \spec{$\phi$} holds
+    ends on a state where \spec{$\psi$} holds.
+  \end{exampleblock}
+\end{frame}
+
+\begin{frame}{Hoare Logic's Rules}
+  % Hoare triples
+  \centering
+  \renewcommand{\arraystretch}{3}
+  \begin{tabular}{l c}
+  composition: & \infer{\hoare{P}{S_1;S_2}{R}}{\hoare{P}{S_1}{Q}\quad\hoare{Q}{S_2}{R}}\\
+  conditional: & \infer{\hoare{P}{\textbf{if}~E~\textbf{then}~S_1~\textbf{else}~S_2}{Q}}{\hoare{P\wedge E}{S_1}{Q}& \quad\hoare{P\wedge\neg E}{S_2}{Q}}\\
+  while: & \infer{\hoare{P}{\textbf{while}~E~\textbf{do}~S}{P\wedge\neg E}}{\hoare{P\wedge E}{S}{P}}\\
+  assignment: & \infer{\hoare{Q[e/x]}{x:=e}{Q}}{}\\
+  consequence: & \infer{\hoare{P}{S}{Q}}{P\rightarrow P'\quad\hoare{P'}{S}{Q'}\quad Q\rightarrow Q'}
+  \end{tabular}
+
+\end{frame}
+
+\begin{frame}{Separation Logic}
+
 \end{frame}
 
 \begin{frame}{The Verified Software Toolchain}
