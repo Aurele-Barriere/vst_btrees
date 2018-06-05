@@ -16,7 +16,6 @@ where \lstinline{targetIdx} was the return value of \lstinline{findChildIndex}.
 This means that the array could sometimes be accessed at index -1.
 
 We fixed this issue by implementing another function \lstinline{findRecordIndex} used on leaf nodes, which is formally proved to return a positive number.
-Another substantial difference between \lstinline{findChildIndex} and \lstinline{findRecordIndex} is that \todo{inclusive, exclusive. Because of the spec and the def}.
 
 \paragraph{Constructing Cursors for a New Key}
 Another issue arose when building a new cursor for a key that wasn't already in the \btree.

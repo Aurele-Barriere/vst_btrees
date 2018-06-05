@@ -26,7 +26,7 @@ This operator is convenient when dealing with multiples objects in the memory.
 For instance, if $\btrep(n,p)$ means that the node $n$ is represented in the memory at address $p$, then $\btrep(n_1,p_1)*\btrep(n_2,p_2)$ means that the two nodes are in the heap, at different addresses (in particular, $p_1\neq p_2$).
 Without this operator, one would have to add many propositions of the form $p_1\neq p_2$ when describing multiple objects in the heap, making the proof harder.
 Separation Logic also defines the \textit{magic wand} operator $\wand$. Informally, $P~\wand~Q$ means that if the heap is extended with a disjoint part where $P$ holds, then $Q$ holds on the total heap.
-This is particularly useful to extract information from a separation construct. \todo{example: refer to the subnode\_rep lemma}
+This is particularly useful to extract information from a separation construct, as seen in Section~\ref{subsec:btverif}.
 
 \def\prop{\lstinline[language=Coq]{PROP}}
 \def\local{\lstinline[language=Coq]{LOCAL}}
@@ -62,57 +62,74 @@ Definition moveToFirst_spec : ident * funspec :=
 \end{figure}
 
 
-\subsection{\btrees\ Representation in Separation Logic}
+\subsection{Augmented Types}
 \label{subsec:rep}
 For each formal type, we need a representation predicate to specify how it is represented in the memory.
 For instance, in the VST verification of Binary-Search Trees~\cite{vst}, the predicate \lstinline[language=Coq]{tree_rep (t: tree val) (p: val) : mpred} is defined.
 Such predicates relate a formal structure to a statement on the content of the memory.
 However, this statement (of type \texttt{mpred}) holds more information than the formal model.
-For instance, when we express that some formal tree is represented in the memory, we need to say at which address is each node represented at.
-These addresses are not part of the formal model.
-Similarly, when using a Coq list as a formal model for an array, the memory actually contains more than the values in the list if the list's length is not as big as the allocated size of the array.
 
-In previous VST proofs, there have been two main ways to deal with this additional information.
-The first one is to give the extra information as an argument to the representation predicate.
-When writing \lstinline[language=Coq]{tree_rep t p} for instance, to state that the formal tree \texttt{t} is represented at address \texttt{p}, the address \texttt{p} is a value that is needed by the memory predicate but not part of the formal model.
-This approach has the benefit of making a clear distinction between the formal model and the additional information.
-This also allows the user to access this information if needed.
-For instance, one could prove the lemma \lstinline[language=Coq]{forall t p, tree_rep t p |-- valid_pointer p}.
-However, this is not a convenient way to deal with information that is either not useful outside of the representation predicate, or more complex than a simple value.
-Indeed, we don't need to prove anything about the filler values in a C array. %that are outside of the Coq list that represents it.
-And it would not be convenient to give to \lstinline{tree_rep} all the values where each node is represented at.
+For instance, consider the following linked list in a C program:
 
-Another solution is to existentially quantify over this additional information inside the representation predicate.
-For instance, when representing an array with a list, one could define \lstinline{list_rep (l:list A) (p:val)} such that there exists some filler values in the memory.
-Similarly, when defining \lstinline{tree_rep t p}, for each child \texttt{c} of \texttt{t}, we claim that there exists some value \texttt{pc} such that the C pointer to \texttt{c} in \texttt{t} contains \texttt{pc} and in separating conjunction, we have \lstinline{tree_rep c pc}.
-This solution is perfect for hiding all the additional information that an external user do not need to see when looking at the specifications.
-However, such information cannot be retrieved outside of the memory predicate.
+\begin{center}
+  \begin{tikzpicture}[list/.style={rectangle split, rectangle split parts=2,
+        draw, rectangle split horizontal}, >=stealth]
+    
+    \node[list] (A) {$a_0$ \nodepart{two} $q_0$};
+    \node[list] (B) [right=of A] {$a_1$ \nodepart{two} $q_1$};
+    \node[list] (C) [right=of B] {$a_2$ \nodepart{two} \texttt{nullval}};
+    \draw[*->,xshift=1cm] let \p1 = (A.east), \p2 = (A.center) in (\x1,\y2) -- (B);
+    \draw[*->] let \p1 = (B.east), \p2 = (B.center) in (\x1,\y2) -- (C);
+  \end{tikzpicture}
+\end{center}
 
-For traditional \btrees, these two ways are sufficient. We can hide the addresses of the subnodes and the filler array values by quantifying existentially over them.
-And we can use the root address as an argument to \lstinline[language=Coq]{tree_rep}.
-However, we claim that this is not enough to deal with the representation of cursors.
-Indeed, cursors hold pointers to nodes of a \btree.
-The values used in the memory representation of a cursor should then be the same as the addresses where each node is represented at.
-Using a quantifier over theses values would require to define \lstinline{cursor_rep} and \lstinline{relation_rep} together, but we want to be able to define several cursors on one relation.
-Thus, we need these values to be apparent in the specification.
-It wouldn't be enough to give the list of values used by the cursor as an argument, as we need the addresses of every node of the \btree, if the cursor was to change.
-To solve this issue, we decided to define an augmented type for \btrees.
-This type can be seen \textbf{Fig.}~\ref{coqtypes}.
-The augmented type is parametrized by a Coq Type X, which can be either \texttt{unit} or \texttt{val}.
-Using \texttt{val} allows to add the C address of each node, record or relation directly into the formal type.
-An user can still reason about abstract \btrees\ with \texttt{btnode unit}.
-Finally, an augmented cursor contains a list of augmented nodes, with their addresses.
-If an augmented cursor \texttt{c} is correct with regards to an augmented relation \texttt{r}, and we have \lstinline{cursor_rep c r pc * relation_rep r n}, then the values of the C cursor corresponding to \texttt{c} are the addresses where each node is represented in te memory.
-Our augmented type approach is a generalization of the first approach, giving additional values as argument.
-However, because we need to give each address of the tree (not only the root), augmenting the formal type with these values has been the most convenient.
-The separation between abstract structure and additional information is less visible at first, but we can easily define an erasure function that transforms augmented trees into trees of type \texttt{btnode unit}.
+This list is a representation of the formal list $[a_0,a_1,a_2]$.
+Each element contains a pointer to the following one.
+The pointers $q_0, q_1$ should not appear in the formal model but are needed by the representation predicate.
+One should write \lstinline{listrep} such that this additional representation information is hidden from the user.
 
-We then define the functions \texttt{btnode\_rep}, \texttt{cursor\_rep} and \texttt{relation\_rep} that are used to specify how each structure is represented in memory.
-They use a combination of \texttt{data\_at} and \texttt{malloc\_token} defined by VST.
-\textbf{Fig.}~\ref{btnoderep} (in the appendix) shows one of these definitions.
-We then prove multiple lemmas about these representations. For instance, if a node is represented in the memory at some address $p$, then $p$ is a valid pointer.
+The usual way to do that in VST consists in existentially quantifying over these values.
+For instance, one could write:
+\begin{lstlisting}[language=Coq]
+Definition list_rep (l:list A) (p:val) : mpred :=
+  match l with
+    | [ ] => emp
+    | ai::l' => EX pi:val, cell_rep ai pi p * list_rep l' pi
+  end.
+\end{lstlisting}
+
+Where \lstinline{cell_rep ai pi p} means that there exists a cell in the memory containing value \texttt{ai} and pointer \texttt{pi} at address \texttt{p}.
+\lstinline{list_rep l p} describes that list \texttt{l} is represented in the memory, starting at address \texttt{p}. This is convenient for many data-structures.
+However, if an external data-structure holds pointer to the cells, we would want the value of such pointers to be the same as the ones quantified over.
+For instance, if some structure contains a pointer to the cell containing $a_1$, we need the pointer to be equal to $q_0$.
+But with the previous definition of \lstinline{list_rep}, $q_0$ isn't known outside of the quantifier's scope.
+
+We suggest using an augmented type for lists that holds both the formal model and the additional representation information.
+We first define the type \lstinline{concrete_list} as
+\lstinline[language=Coq]{Definition concrete_list A : Type := list (A * val).}
+We then write an erasure function of type \lstinline[language=Coq]{concrete_list A -> list A} (here the function \lstinline[language=Coq]{map fst}).
+We can change \lstinline[language=Coq]{list_rep} as follows:
+\begin{lstlisting}[language=Coq]
+Definition list_rep (l:concrete_list A) (p:val) : mpred :=
+  match l with
+    | [ ] => emp
+    | (ai,pi)::l' => cell_rep ai pi p * list_rep l' pi
+  end.
+\end{lstlisting}
+
+Finally, if a structure holds a pointer to a cell, its formal model is given an augmented cell (an element of the augmented list, of type \lstinline{A * val}) and the pointer's representation can use the \lstinline{val}, which is guaranteed to be the address of the cell in the memory.
+% This allows to represent structures that point to another one.
+
+In our \btrees\ library, we have cursors containing pointers to subnodes of a \btree. We thus define a general \btree\ type, as seen on \textbf{Fig.}~\ref{coqtypes}, parametrized with a type \texttt{X}.
+Finally we define the following types:\\
+\lstinline[language=Coq]{Definition concrete_tree A : Type := node val.}\\
+\lstinline[language=Coq]{Definition abstract_tree A : Type := node unit.}
+
+We then define a representation lemma on augmented trees and augmented cursors (in appendix, \textbf{Fig.}~\ref{btnoderep}).
+We also prove multiple lemmas about these representations. For instance, if a node is represented in the memory at some address $p$, then $p$ is a valid pointer.
 
 \subsection{\btrees\ Verification}
+\label{subsec:btverif}
 % rep functions
 % locals
 We define properties of the \btrees\ and cursors that are required to prove correctness.

@@ -22,7 +22,7 @@
 \definecolor{prog}{HTML}{106235}
 \def\spec#1{{\color{spec}\textbf{#1}}}
 \def\prog#1{{\color{prog}\textbf{#1}}}
-
+\newcommand{\wand}{\mathrel{-\hspace{-.7ex}*}}
 
 \makeatletter
 \makeatother
@@ -190,13 +190,43 @@
 
 \end{frame}
 
-\begin{frame}{Separation Logic}
-
-\end{frame}
-
+%% \begin{frame}{Separation Logic: an extension of Hoare Logic}
+%%   \begin{block}{Separating Conjunction}
+%%     $P_1~*P_2$ means that $P_1$ and $P_2$ hold on disjoint parts of the memory.
+%%   \end{block}
+%%   \vfill
+%%   \begin{block}{Separating Implication, Magic Wand}
+%%     $P_1\wand P_2$ ...
+%%   \end{block}
+%%   \todo{...}
+%%   % don't think this is needed for the presentation
+%% \end{frame}
+\section{Verification}
 \begin{frame}{The Verified Software Toolchain}
 
-  % general presentation
+  \begin{block}{Verifiable C}
+    Subset of CompCert's Clight.
+  \end{block}
+  \vfill
+  \begin{block}{Program Logic}
+    Higher-order Separation Logic, an extension of Hoare Logic.
+  \end{block}
+  \vfill
+  \begin{block}{Using VST}
+    \begin{itemize}
+    \item Generate an equivalent Clight program
+    \item Define a formal model
+    \item Write specifications for each functions ($\approx$ Hoare Triple)
+    \item Prove each function correct
+    \end{itemize}
+  \end{block}
+  
+\end{frame}
+
+\begin{frame}{A B+Tree with Cursors formal model}
+
+  % types
+  % example function, movetonext
   
 \end{frame}
 
@@ -217,26 +247,12 @@ Definition moveToFirst_spec : ident * funspec :=
 \end{lstlisting}
 \end{frame}
 
-
 \begin{frame}{Proving a C program correct with VST}
 
   % step through a proof?
   % forward, forward_if, forward_proof
   % prove array in range etc...
   
-\end{frame}
-
-\section{Verification}
-\begin{frame}{A B+Tree with Cursors formal model}
-
-  % types
-  % example function, movetonext
-  
-\end{frame}
-
-\begin{frame}{Specifications}
-
-  % example
 \end{frame}
 
 \begin{frame}{Proving each function correct}
