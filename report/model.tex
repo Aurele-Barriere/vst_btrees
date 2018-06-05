@@ -4,7 +4,7 @@ This model will be used to specify each C function with VST.
 Then, the correctness can be proved by showing that the functions of the formal model comply with the formal specification, thus leveraging the proof to a Coq one without C semantics.
 
 % why not Brian's model ?
-DeepDB already contained a formal model that complied with the abstract relation axiomatization~\cite{brian}.
+DeepSpecDB already contained a formal model that complied with the abstract relation axiomatization~\cite{brian}.
 However, this \btree\ model does not exactly mimic the behavior of the C code.
 For instance, entries of the C implementation contain a pointer to the child with greater keys.
 Then, the node contains a pointer to the first child.
@@ -40,7 +40,7 @@ We can see that entries have a key, and either a record (of type \texttt{V}) or 
 Nodes have three booleans, representing the \texttt{isLeaf}, \texttt{First} and \texttt{Last} of the C code.
 The $ptr_0$ of a node is represented with an option, as Leaf Nodes don't have any.
 These types are parametrized by a type \texttt{X}, that can be either \texttt{val} or \texttt{unit}.
-An explanation is given section \todo{ref}.
+An explanation is given section~\ref{subsec:rep}.
 
 A cursor is implemented in Coq as a list of nodes and indexes.
 This corresponds to the arrays found in the C code. The list starts at the root and its head is the current node and index.

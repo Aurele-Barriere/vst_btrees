@@ -63,6 +63,7 @@ Definition moveToFirst_spec : ident * funspec :=
 
 
 \subsection{\btrees\ Representation in Separation Logic}
+\label{subsec:rep}
 For each formal type, we need a representation predicate to specify how it is represented in the memory.
 For instance, in the VST verification of Binary-Search Trees~\cite{vst}, the predicate \lstinline[language=Coq]{tree_rep (t: tree val) (p: val) : mpred} is defined.
 Such predicates relate a formal structure to a statement on the content of the memory.
@@ -77,13 +78,13 @@ When writing \lstinline[language=Coq]{tree_rep t p} for instance, to state that 
 This approach has the benefit of making a clear distinction between the formal model and the additional information.
 This also allows the user to access this information if needed.
 For instance, one could prove the lemma \lstinline[language=Coq]{forall t p, tree_rep t p |-- valid_pointer p}.
-However, this is not a useful way to deal with information that is either not useful outside of the representation predicate, or more complex than a simple value.
-Indeed, we don't need to prove anything about the filler \todo{?} values in a C array that are outside of the Coq list that represents it.
+However, this is not a convenient way to deal with information that is either not useful outside of the representation predicate, or more complex than a simple value.
+Indeed, we don't need to prove anything about the filler values in a C array. %that are outside of the Coq list that represents it.
 And it would not be convenient to give to \lstinline{tree_rep} all the values where each node is represented at.
 
 Another solution is to existentially quantify over this additional information inside the representation predicate.
 For instance, when representing an array with a list, one could define \lstinline{list_rep (l:list A) (p:val)} such that there exists some filler values in the memory.
-Similarly, when defining \lstinline{tree_rep t p}, for each child \texttt{c} of \texttt{t}, we claim that there exists some value \texttt{pc} such that the C pointer to \texttt{c} in \texttt{t} contains \texttt{pc} and in separating conjunction, we have \lstinline{tree_rep c pc}.\todo{should I write a complete example?}
+Similarly, when defining \lstinline{tree_rep t p}, for each child \texttt{c} of \texttt{t}, we claim that there exists some value \texttt{pc} such that the C pointer to \texttt{c} in \texttt{t} contains \texttt{pc} and in separating conjunction, we have \lstinline{tree_rep c pc}.
 This solution is perfect for hiding all the additional information that an external user do not need to see when looking at the specifications.
 However, such information cannot be retrieved outside of the memory predicate.
 
