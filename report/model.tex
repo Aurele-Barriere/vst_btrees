@@ -22,7 +22,7 @@ Inductive entry (X:Type): Type :=
      | keyval: key -> V -> X -> entry X
      | keychild: key -> node X -> entry X
 with node (X:Type): Type :=
-     | btnode: option (node X) -> listentry X -> bool -> bool -> bool -> X -> node X
+     | btnode: option(node X)-> listentry X-> bool-> bool-> bool-> X-> node X
 with listentry (X:Type): Type :=
      | nil: listentry X
      | cons: entry X -> listentry X -> listentry X.

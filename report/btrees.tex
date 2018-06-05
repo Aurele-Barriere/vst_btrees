@@ -31,10 +31,9 @@ Because this node is full, it should be split into two: one containing 0, 1, 2, 
 Then, key 2 should be inserted into the parent node (with keys 5, 9, 12, 15).
 Because this node is full too, it should be split.
 Because internal nodes do not contain records, the middle key can simply be pushed to the root without being copied.
-The resulting \btree, after insertion, can be seen \textbf{Fig}~\ref{btinsert}.
+The resulting \btree, after insertion, can be seen in the appendix \textbf{Fig}~\ref{btinsert}.
 
 \beforeinsert
-\afterinsert
 
 \paragraph{Accessing a Record} Takes a key as input. Because the tree is ordered, it suffices to go down from the root.
 At each node, the values of the keys indicate which child to go to at the next step.
@@ -91,20 +90,6 @@ Finally, a cursor has an array of ancestors (the nodes, from the root to the lea
 
 This library contains 37 functions, all of which are verified in VST (see Section~\ref{sec:verif}).\todo{all?}
 Deletion hasn't been implemented yet.
-The functions that can be used by a client of the library include:
-\begin{itemize}
-\item \lstinline{Relation_T RL_NewRelation(void);}  creates a new, empty relation.
-\item \lstinline{Cursor_T RL_NewCursor(Relation_T relation);}  creates a cursor for a given relation, pointing to the first key.
-\item \lstinline{Bool RL_CursorIsValid(Cursor_T cursor);}  returns true if the cursor is pointing to a key.
-\item \lstinline{Key RL_GetKey(Cursor_T cursor);}  returns the key pointed to by a cursor.
-\item \lstinline{const void* RL_GetRecord(Cursor_T cursor);}  returns the record pointed to by a cursor.
-\item \lstinline{void RL_PutRecord(Cursor_T cursor, Key key, const void* record);}  inserts a new record.
-\item \lstinline{Bool RL_MoveToKey(Cursor_T cursor, Key key);}  moves the cursor to a given key.
-\item \lstinline{Bool RL_MoveToFirst(Cursor_T btCursor);}  moves the cursor to the first key.
-\item \lstinline{void RL_MoveToNext(Cursor_T btCursor);}  moves the cursor to the next position.
-\item \lstinline{void RL_MoveToPrevious(Cursor_T btCursor);}  moves the cursor to the previous position.
-\item \lstinline{Bool RL_IsEmpty(Cursor_T btCursor);}  returns true if the \btree\ of the cursor is empty.
-\item \lstinline{size_t RL_NumRecords(Cursor_T btCursor);}  returns the number of keys in the \btree.
-\end{itemize}
+The list of all functions that can be used by a client of the library can be seen in the appendix, \textbf{Fig.}~\ref{header}.
 
 

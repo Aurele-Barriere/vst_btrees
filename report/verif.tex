@@ -91,7 +91,7 @@ One should write \lstinline{listrep} such that this additional representation in
 The usual way to do that in VST consists in existentially quantifying over these values.
 For instance, one could write:
 \begin{lstlisting}[language=Coq]
-Definition list_rep (l:list A) (p:val) : mpred :=
+Fixpoint list_rep (l:list A) (p:val) : mpred :=
   match l with
     | [ ] => emp
     | ai::l' => EX pi:val, cell_rep ai pi p * list_rep l' pi
@@ -100,7 +100,7 @@ Definition list_rep (l:list A) (p:val) : mpred :=
 
 Where \lstinline{cell_rep ai pi p} means that there exists a cell in the memory containing value \texttt{ai} and pointer \texttt{pi} at address \texttt{p}.
 \lstinline{list_rep l p} describes that list \texttt{l} is represented in the memory, starting at address \texttt{p}. This is convenient for many data-structures.
-However, if an external data-structure holds pointer to the cells, we would want the value of such pointers to be the same as the ones quantified over.
+However, if an external data-structure holds pointers to the cells, we would want the value of such pointers to be the same as the ones quantified over.
 For instance, if some structure contains a pointer to the cell containing $a_1$, we need the pointer to be equal to $q_0$.
 But with the previous definition of \lstinline{list_rep}, $q_0$ isn't known outside of the quantifier's scope.
 
@@ -110,7 +110,7 @@ We first define the type \lstinline{concrete_list} as
 We then write an erasure function of type \lstinline[language=Coq]{concrete_list A -> list A} (here the function \lstinline[language=Coq]{map fst}).
 We can change \lstinline[language=Coq]{list_rep} as follows:
 \begin{lstlisting}[language=Coq]
-Definition list_rep (l:concrete_list A) (p:val) : mpred :=
+Fixpoint list_rep (l:concrete_list A) (p:val) : mpred :=
   match l with
     | [ ] => emp
     | (ai,pi)::l' => cell_rep ai pi p * list_rep l' pi
@@ -125,7 +125,7 @@ Finally we define the following types:\\
 \lstinline[language=Coq]{Definition concrete_tree A : Type := node val.}\\
 \lstinline[language=Coq]{Definition abstract_tree A : Type := node unit.}
 
-We then define a representation lemma on augmented trees and augmented cursors (in appendix, \textbf{Fig.}~\ref{btnoderep}).
+We then define a representation lemma on augmented trees and augmented cursors (in the appendix, \textbf{Fig.}~\ref{btnoderep}).
 We also prove multiple lemmas about these representations. For instance, if a node is represented in the memory at some address $p$, then $p$ is a valid pointer.
 
 \subsection{\btrees\ Verification}
@@ -176,4 +176,4 @@ Such goals (called entailments) are proved using separation logic rules implemen
 
 \subsection{Results}
 \todo{TODO: what has been proved? what's left?}
-In appendix, Section~\ref{subsec:proof} presents the VST proof of the function creating a new node.
+In the appendix, Section~\ref{subsec:proof} presents the VST proof of the function creating a new node.
