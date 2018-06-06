@@ -47,6 +47,8 @@ But this locality isn't exploited, as the functions always start from the root.
 Cursors aim to exploit the locality of operations on close keys, by remembering the last position where the tree was modified or accessed.
 Then for instance, to look for a new key, the function can start from the last accessed leaf. If the searched key is in the same node, then the function has constant time complexity.
 Otherwise, it should go up to the node's parent before going down again. If the searched key is close, this should significantly reduce the number of node accesses.
+Abstractly, cursors point to a position in the ordered list of key-value pairs represented by a \btree.
+Their main purpose is to allow fast operations that go through a \btree\ sequentially, such as range queries.
 
 % Cursor definition
 A cursor is implemented as an array of pairs. Each pair contains a pointer to a node and an index for that node.
