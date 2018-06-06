@@ -13,7 +13,7 @@
 \usepackage{algorithm}
 \usepackage{algpseudocode}
 \usepackage{wrapfig}
-\usetikzlibrary{positioning,shapes}
+\usetikzlibrary{calc,shapes.multipart,chains,arrows,positioning,shapes,tikzmark}
 \usepackage{multicol}
 \usepackage{btreecursor}
 \usepackage{lstcoq}
@@ -23,6 +23,18 @@
 \def\spec#1{{\color{spec}\textbf{#1}}}
 \def\prog#1{{\color{prog}\textbf{#1}}}
 \newcommand{\wand}{\mathrel{-\hspace{-.7ex}*}}
+
+\lstset{language=C,
+                basicstyle=\ttfamily\footnotesize,
+                keywordstyle=\color{RedViolet}\ttfamily,
+                stringstyle=\color{Violet}\ttfamily,
+                commentstyle=\color{MidnightBlue}\ttfamily,
+                morecomment=[l][\color{magenta}]{\#},
+                morekeywords={Bool, Key, size_t},
+                emph={%  
+                  Relation_T, Cursor_T, BtNode_T, Relation, Cursor, BtNode, Entry, Child_or_Record%
+                },emphstyle={\color{Maroon}}
+}
 
 \makeatletter
 \makeatother
@@ -84,7 +96,7 @@
   % introduction to software verif
   \begin{block}{DeepSpecDB}
     \begin{itemize}
-    \item Define, specify and verify a high-performance concurrent in-memory database system.
+    \item Define, specify and verify a high-performance {\color{mDarkRed}concurrent} in-memory database system.
     \item Based on MassTree, uses \btrees
     \item C sequential library for \btrees\ with cursors
     \item Coq abstract relation with cursors specification
@@ -164,15 +176,15 @@
   \end{block}
   \vfill
   \begin{block}{Hoare Triple}
-    $$\{ \spec{$\phi$} \}\quad \prog{S} \quad\{ \spec{$\psi$} \}$$
+    $$\{ \spec{$P$} \}\quad \prog{S} \quad\{ \spec{$Q$} \}$$
     \begin{center}
       Precondition\quad Program\quad Postcondition
     \end{center}
   \end{block}
   \vfill
   \begin{exampleblock}{Hoare Triple's meaning}
-    Any terminating execution of \prog{S} from a state where \spec{$\phi$} holds
-    ends on a state where \spec{$\psi$} holds.
+    Any terminating execution of \prog{S} from a state where \spec{$P$} holds
+    ends on a state where \spec{$Q$} holds.
   \end{exampleblock}
 \end{frame}
 
@@ -223,29 +235,174 @@
   
 \end{frame}
 
-\begin{frame}{A B+Tree with Cursors formal model}
+\begin{frame}[fragile]{A B+Tree with Cursors formal model}
 
-  % types
-  % example function, movetonext
+  \begin{lstlisting}[language=Coq,basicstyle=\scriptsize]
+(* Btree Types *)
+Inductive entry (X:Type): Type :=
+     | keyval: key -> V -> X -> entry X
+     | keychild: key -> node X -> entry X
+with node (X:Type): Type :=
+     | btnode: option(node X)-> listentry X-> bool-> bool-> bool-> X -> node X
+with listentry (X:Type): Type :=
+     | nil: listentry X
+     | cons: entry X -> listentry X -> listentry X.
+
+Definition cursor (X:Type): Type := list (node X * index). (* ancestors and index *)
+Definition relation (X:Type): Type := node X * X.  (* root and address *)
+  \end{lstlisting}
+  \vspace{-1em}
+  \vfill
+  \cursor
+  
+\end{frame}
+
+\begin{frame}[fragile]{Augmented Type}
+
+  \begin{tikzpicture}[list/.style={rectangle split, rectangle split parts=2,
+        draw, rectangle split horizontal}, >=stealth]
+    
+    \node[list] (A) {$a_0$ \nodepart{two} $q_0$};
+    \node[list] (B) [right=of A] {$a_1$ \nodepart{two} $q_1$};
+    \node[list] (C) [right=of B] {$a_2$ \nodepart{two} \texttt{nullval}};
+    \node[draw, rectangle] (D) [above=of B] {$q$};
+    \node (E) [right=of C] {$[a_0,a_1,a_2]$};
+    \node (F) [above=of E] {pointer to $a_1$};
+    \draw[*->] let \p1 = (A.east), \p2 = (A.center) in (\x1,\y2) -- (B);
+    \draw[*->] let \p1 = (B.east), \p2 = (B.center) in (\x1,\y2) -- (C);
+    \draw[*->] (D.south) -- ([xshift=-0.25cm]B.north);
+  \end{tikzpicture}
+  \vfill
+  \begin{lstlisting}[language=Coq]
+Fixpoint list_rep (l:list A) (p:val) : mpred :=
+  match l with
+    | [ ] => emp
+    | ai::l' => EX pi:val, cell_rep ai pi p * list_rep l' pi
+  end.
+  \end{lstlisting}
+  \vfill
+  \begin{center}
+    \color{mDarkRed}$q=q0?$
+  \end{center}
+  
+\end{frame}
+
+\begin{frame}[fragile]{Augmented Type}
+
+  \begin{tikzpicture}[list/.style={rectangle split, rectangle split parts=2,
+        draw, rectangle split horizontal}, >=stealth]
+    
+    \node[list] (A) {$a_0$ \nodepart{two} $q_0$};
+    \node[list] (B) [right=of A] {$a_1$ \nodepart{two} $q_1$};
+    \node[list] (C) [right=of B] {$a_2$ \nodepart{two} \texttt{nullval}};
+    \node[draw, rectangle] (D) [above=of B] {$q$};
+    \node (E) [right=of C,xshift=-1cm] {\small$[(a_0,q_0),(a_1,q_1),(a_2,\texttt{nullval})]$};
+    \node (F) [above=of E,xshift=-1cm] {pointer to $(a_1,q_0)$};
+    \draw[*->] let \p1 = (A.east), \p2 = (A.center) in (\x1,\y2) -- (B);
+    \draw[*->] let \p1 = (B.east), \p2 = (B.center) in (\x1,\y2) -- (C);
+    \draw[*->] (D.south) -- ([xshift=-0.25cm]B.north);
+  \end{tikzpicture}
+  \vfill
+ \begin{lstlisting}[language=Coq]
+Fixpoint list_rep (l:concrete_list A) (p:val) : mpred :=
+  match l with
+    | [ ] => emp
+    | (ai,pi)::l' => cell_rep ai pi p * list_rep l' pi
+  end.
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Augmented \btrees\ types}
+
+  \begin{lstlisting}[language=Coq,basicstyle=\scriptsize]
+(* Btree Types *)
+Inductive entry (X:Type): Type :=
+     | keyval: key -> V -> X -> entry X
+     | keychild: key -> node X -> entry X
+with node (X:Type): Type :=
+     | btnode: option(node X)-> listentry X-> bool-> bool-> bool-> X -> node X
+with listentry (X:Type): Type :=
+     | nil: listentry X
+     | cons: entry X -> listentry X -> listentry X.
+
+Definition cursor (X:Type): Type := list (node X * index). (* ancestors and index *)
+Definition relation (X:Type): Type := node X * X.  (* root and address *)
+  \end{lstlisting}
+  \vfill
+  \begin{lstlisting}[language=Coq]
+Definition concrete_tree : Type := node val.
+Definition abstract_tree : Type := node unit.
+  \end{lstlisting}
+
+  
+\end{frame}
+
+\begin{frame}[fragile]{A B+Tree with Cursors formal model}
+
+  \begin{lstlisting}[language=Coq,basicstyle=\scriptsize]
+(* takes a PARTIAL cursor, n next node (pointed to by the cursor)
+   and goes down to the first key *)
+Fixpoint moveToFirst {X:Type} (n:node X) (c:cursor X) (level:nat): cursor X :=
+  match n with
+    btnode ptr0 le isLeaf First Last x =>
+    match isLeaf with
+    | true => (n,ip 0)::c
+    | false => match ptr0 with
+               | None => c      (* not possible, isLeaf is false *)
+               | Some n' => moveToFirst n' ((n,im)::c) (level+1)
+               end
+    end
+  end.
+\end{lstlisting}
   
 \end{frame}
 
 \begin{frame}[fragile]{Specifying a C program with VST}
- \begin{lstlisting}[language=Coq,basicstyle=\scriptsize]
-Definition moveToFirst_spec : ident * funspec :=
-  DECLARE _moveToFirst
-  WITH r:relation val, c:cursor val, pc:val, n:node val
-  PRE[ _node OF tptr tbtnode, _cursor OF tptr tcursor, _level OF tint ]
-    PROP(partial_cursor c r; next_node c (get_root r) = Some n)
-    LOCAL(temp _cursor pc; temp _node (getval n);
-          temp _level (Vint(Int.repr(Zlength c))))
-    SEP(relation_rep r; cursor_rep c r pc)
+ \begin{lstlisting}[language=Coq,basicstyle=\small]
+Definition RL_MoveToNext_spec : ident * funspec :=
+  DECLARE _RL_MoveToNext
+  WITH c:cursor val, pc:val, r:relation val, numrec:nat
+  PRE[ _cursor OF tptr tcursor ]
+    PROP(complete_cursor c r)
+    LOCAL(temp _cursor pc)
+    SEP(relation_rep r numrec; cursor_rep c r pc)
   POST[ tvoid ]
     PROP()
     LOCAL()
-    SEP(relation_rep r; cursor_rep (moveToFirst n c (length c)) r pc).
-\end{lstlisting}
+    SEP(relation_rep r numrec; cursor_rep (RL_MoveToNext c r) r pc).
+ \end{lstlisting}
+ \vfill
+ \begin{center}
+   \hoare{P}{S}{Q}
+ \end{center}
+ \begin{tikzpicture}[remember picture, overlay,%
+      ]
+      \node[anchor=north west,
+      xshift=0.5cm,
+      yshift=-1.9cm] 
+      at (current page.north west) (S) {\prog{$S$}};
+      \draw[draw=prog,fill=prog] ([xshift=0.2cm,yshift=-0.4cm]S) rectangle ++(0.1cm,0.8cm);
+ \end{tikzpicture}
+ \begin{tikzpicture}[remember picture, overlay,%
+      ]
+      \node[anchor=north west,
+      xshift=0.5cm,
+      yshift=-3.4cm] 
+      at (current page.north west) (P) {\spec{$P$}};
+      \draw[draw=spec,fill=spec] ([xshift=0.2cm,yshift=-0.9cm]P) rectangle ++(0.1cm,1.8cm);
+ \end{tikzpicture}
+ \begin{tikzpicture}[remember picture, overlay,%
+      ]
+      \node[anchor=north west,
+      xshift=0.5cm,
+      yshift=-5.3cm] 
+      at (current page.north west) (Q) {\spec{$Q$}};
+      \draw[draw=spec,fill=spec] ([xshift=0.2cm,yshift=-0.9cm]Q) rectangle ++(0.1cm,1.8cm);
+    \end{tikzpicture}
 \end{frame}
+
+
+
 
 \begin{frame}{Proving a C program correct with VST}
 
@@ -255,15 +412,12 @@ Definition moveToFirst_spec : ident * funspec :=
   
 \end{frame}
 
-\begin{frame}{Proving each function correct}
-
-  % results.
-  % anything left to prove?
-
-\end{frame}
-
-\begin{frame}{Bugs of the Original Implementation}
-  
+\begin{frame}[fragile]{Bugs of the Original Implementation}
+  \begin{lstlisting}[language=C]
+if (node->entries[targetIdx].key == key)
+  \end{lstlisting}
+  \vfill
+  \bugcursor
   % buildnig cursor for non key values
   % wrong array access
   % wrong complexity
@@ -271,10 +425,42 @@ Definition moveToFirst_spec : ident * funspec :=
 \end{frame}
 
 \section{Future Work}
-\begin{frame}{DeepSpecDB}
-  % towards a high-performance database like MassTree
-  % Tries of Btrees. How does that work with the proofs
+\begin{frame}{Results}
 
-\end{frame}
+  \begin{exampleblock}{Finished Proofs}
+    {\color{Gray}(almost)} All 37 C functions are specified and proved using VST.
+  \end{exampleblock}
+  \vfill
+  \begin{alertblock}{Remaining Proofs}
+    Many theorems about the \textbf{formal} model.
+  \end{alertblock}
+  \vfill
+  \begin{itemize}
+  \item 1 kloc formal model and related lemmas
+  \item 1 kloc representation predicates and functions specifications
+  \item 4 kloc VST proofs
+  \end{itemize}
   
+\end{frame}
+
+\begin{frame}{Conclusion}
+  \begin{block}{Contribution}
+    We now have
+    \begin{itemize}
+    \item A modified C library for \btrees\ with Cursors.
+    \item A Coq formal model for \btrees\ with Cursors.
+    \item A VST correctness proof relating the two.
+    \end{itemize}
+  \end{block}
+  \vfill
+  \begin{block}{Future Work}
+    \begin{itemize}
+    \item Prove the remaining Lemmas.
+    \item Prove correctness of the Trie of \btrees\ data-structure.
+    \item Concurrent database.
+    \end{itemize}
+  \end{block}
+  
+\end{frame}
+
 \end{document}
