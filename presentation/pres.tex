@@ -380,37 +380,108 @@ Definition RL_MoveToNext_spec : ident * funspec :=
       \node[anchor=north west,
       xshift=0.5cm,
       yshift=-1.9cm] 
-      at (current page.north west) (S) {\prog{$S$}};
-      \draw[draw=prog,fill=prog] ([xshift=0.2cm,yshift=-0.4cm]S) rectangle ++(0.1cm,0.8cm);
+      at (current page.north west) (S) {\prog{$S$\phantom{$PQ$}}};
+      \draw[draw=prog,fill=prog] ([yshift=-0.4cm]S) rectangle ++(0.1cm,0.8cm);
  \end{tikzpicture}
  \begin{tikzpicture}[remember picture, overlay,%
       ]
       \node[anchor=north west,
       xshift=0.5cm,
-      yshift=-3.4cm] 
-      at (current page.north west) (P) {\spec{$P$}};
-      \draw[draw=spec,fill=spec] ([xshift=0.2cm,yshift=-0.9cm]P) rectangle ++(0.1cm,1.8cm);
+      yshift=-3.35cm] 
+      at (current page.north west) (P) {\spec{$P$}\phantom{$SQ$}};
+      \draw[draw=spec,fill=spec] ([yshift=-0.9cm]P) rectangle ++(0.1cm,1.8cm);
  \end{tikzpicture}
  \begin{tikzpicture}[remember picture, overlay,%
       ]
       \node[anchor=north west,
       xshift=0.5cm,
       yshift=-5.3cm] 
-      at (current page.north west) (Q) {\spec{$Q$}};
-      \draw[draw=spec,fill=spec] ([xshift=0.2cm,yshift=-0.9cm]Q) rectangle ++(0.1cm,1.8cm);
+      at (current page.north west) (Q) {\spec{$Q$}\phantom{$SP$}};
+      \draw[draw=spec,fill=spec] ([yshift=-0.9cm]Q) rectangle ++(0.1cm,1.8cm);
     \end{tikzpicture}
 \end{frame}
 
 
 
 
-\begin{frame}{Proving a C program correct with VST}
+\begin{frame}[fragile]{Proving a C program correct with VST}
+  \begin{lstlisting}[language=C, basicstyle=\scriptsize]
+static BtNode* createNewNode(Bool isLeaf, Bool First, Bool Last) {
+    BtNode* newNode;
+    newNode = (BtNode*) surely_malloc(sizeof (BtNode));
+    if (newNode == NULL) {
+      return NULL; }
+    newNode->numKeys = 0;
+    newNode->isLeaf = isLeaf;
+    newNode->First = First;
+    newNode->Last = Last;
+    newNode->ptr0 = NULL;
+    return newNode; }
+  \end{lstlisting}
+  \begin{lstlisting}[language=Coq, basicstyle=\tiny]
+Definition createNewNode_spec : ident * funspec :=
+  DECLARE _createNewNode
+  WITH isLeaf:bool, First:bool, Last:bool
+  PRE [ _isLeaf OF tint, _First OF tint, _Last OF tint ]
+    PROP ()
+    LOCAL (temp _isLeaf (Val.of_bool isLeaf);
+         temp _First (Val.of_bool First);
+         temp _Last (Val.of_bool Last))
+    SEP ()
+  POST [ tptr tbtnode ]
+    EX p:val, PROP ()
+    LOCAL (temp ret_temp p)
+    SEP (btnode_rep (empty_node isLeaf First Last p)).
+  \end{lstlisting}
 
-  % step through a proof?
-  % forward, forward_if, forward_proof
-  % prove array in range etc...
-  
 \end{frame}
+
+{ % all template changes are local to this group.
+  \addtocounter{framenumber}{1}
+    \setbeamertemplate{navigation symbols}{}
+    \begin{frame}[standout]
+      \begin{tikzpicture}[remember picture,overlay]
+        \node[at=(current page.center)] {
+          \includegraphics[width=\paperwidth]{proof1.png}
+        };%
+        \node[anchor=north west, xshift=6.5cm, yshift=-4.1cm] at (current page.north west) (S) {};
+        \draw[draw=prog,fill=prog] (S) rectangle ++(0.1cm,0.6cm);
+        \node[anchor=north west, xshift=6.5cm, yshift=-3.41cm] at (current page.north west) (P) {};
+        \draw[draw=spec,fill=spec] (P) rectangle ++(0.1cm,0.65cm);
+        \node[anchor=north west, xshift=8.15cm, yshift=-4.2cm] at (current page.north west) (Q) {};
+        \draw[draw=spec,fill=spec] (Q) rectangle ++(1.2cm,0.1cm);
+ \end{tikzpicture}
+    \end{frame}
+    \begin{frame}[standout]
+      \begin{tikzpicture}[remember picture,overlay]
+        \node[at=(current page.center)] {
+          \includegraphics[width=\paperwidth]{proof2.png}
+        };
+      \end{tikzpicture}
+    \end{frame}
+        \begin{frame}[standout]
+      \begin{tikzpicture}[remember picture,overlay]
+        \node[at=(current page.center)] {
+          \includegraphics[width=\paperwidth]{proof3.png}
+        };
+      \end{tikzpicture}
+    \end{frame}
+    \begin{frame}[standout]
+      \begin{tikzpicture}[remember picture,overlay]
+        \node[at=(current page.center)] {
+          \includegraphics[width=\paperwidth]{proof4.png}
+        };
+      \end{tikzpicture}
+    \end{frame}
+    \begin{frame}[standout]
+      \begin{tikzpicture}[remember picture,overlay]
+        \node[at=(current page.center)] {
+          \includegraphics[width=\paperwidth]{proof5.png}
+        };
+      \end{tikzpicture}
+    \end{frame}
+
+}
 
 \begin{frame}[fragile]{Bugs of the Original Implementation}
   \begin{lstlisting}[language=C]

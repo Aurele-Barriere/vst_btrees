@@ -116,7 +116,7 @@ Proof.
     forward_if (PROP (vret<>nullval)
     LOCAL (temp _newNode vret; temp _isLeaf (Val.of_bool isLeaf);
     temp _First (Val.of_bool First); temp _Last (Val.of_bool Last))
-    SEP (malloc_token Tsh tbtnode vret * data_at_ Tsh tbtnode vret; emp)).
+    SEP (malloc_token Tsh tbtnode vret * data_at_ Tsh tbtnode vret)).
     + forward.                  (* return null *)
     + forward. entailer!.
     + Intros. 
@@ -128,7 +128,7 @@ Proof.
       forward.                  (* newnode->ptr0=null *)
       forward.                  (* return newnode *)
       Exists vret. entailer!.
-      Exists (list_repeat 15 (Vundef, (inl Vundef):(val+val))).
+      Exists (list_repeat Fanout (Vundef, (inl Vundef):(val+val))).
       simpl. cancel.
       apply derives_refl.
 Qed.
