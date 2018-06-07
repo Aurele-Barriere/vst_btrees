@@ -227,7 +227,7 @@
   \begin{block}{Using VST}
     \begin{itemize}
     \item Generate an equivalent Clight program
-    \item Define a formal model
+    \item Define a Coq formal model
     \item Write specifications for each functions ($\approx$ Hoare Triple)
     \item Prove each function correct
     \end{itemize}
@@ -237,13 +237,13 @@
 
 \begin{frame}[fragile]{A B+Tree with Cursors formal model}
 
-  \begin{lstlisting}[language=Coq,basicstyle=\scriptsize]
+  \begin{lstlisting}[language=Coq,basicstyle=\scriptsize,escapeinside={<@}{@>}]
 (* Btree Types *)
 Inductive entry (X:Type): Type :=
      | keyval: key -> V -> X -> entry X
      | keychild: key -> node X -> entry X
 with node (X:Type): Type :=
-     | btnode: option(node X)-> listentry X-> bool-> bool-> bool-> X -> node X
+     | btnode: option(node X)-> listentry X-> bool-> bool-> bool-> <@ \color{mDarkRed}\texttt{X} @> -> node X
 with listentry (X:Type): Type :=
      | nil: listentry X
      | cons: entry X -> listentry X -> listentry X.
@@ -262,15 +262,15 @@ Definition relation (X:Type): Type := node X * X.  (* root and address *)
   \begin{tikzpicture}[list/.style={rectangle split, rectangle split parts=2,
         draw, rectangle split horizontal}, >=stealth]
     
-    \node[list] (A) {$a_0$ \nodepart{two} $q_0$};
-    \node[list] (B) [right=of A] {$a_1$ \nodepart{two} $q_1$};
-    \node[list] (C) [right=of B] {$a_2$ \nodepart{two} \texttt{nullval}};
-    \node[draw, rectangle] (D) [above=of B] {$q$};
-    \node (E) [right=of C] {$[a_0,a_1,a_2]$};
-    \node (F) [above=of E] {pointer to $a_1$};
-    \draw[*->] let \p1 = (A.east), \p2 = (A.center) in (\x1,\y2) -- (B);
-    \draw[*->] let \p1 = (B.east), \p2 = (B.center) in (\x1,\y2) -- (C);
-    \draw[*->] (D.south) -- ([xshift=-0.25cm]B.north);
+    \pause[1] \node[list] (A) {$a_0$ \nodepart{two} $q_0$};
+    \pause[1] \node[list] (B) [right=of A] {$a_1$ \nodepart{two} $q_1$};
+    \pause[1] \node[list] (C) [right=of B] {$a_2$ \nodepart{two} \texttt{nullval}};
+    \pause[2] \node[draw, rectangle] (D) [above=of B] {$q$};
+    \pause[1] \node (E) [right=of C] {$[a_0,a_1,a_2]$};
+    \pause[2] \node (F) [above=of E] {pointer to $a_1$};
+    \pause[1] \draw[*->] let \p1 = (A.east), \p2 = (A.center) in (\x1,\y2) -- (B);
+    \pause[1] \draw[*->] let \p1 = (B.east), \p2 = (B.center) in (\x1,\y2) -- (C);
+    \pause[2] \draw[*->] (D.south) -- ([xshift=-0.25cm]B.north);
   \end{tikzpicture}
   \vfill
   \begin{lstlisting}[language=Coq]
@@ -281,9 +281,9 @@ Fixpoint list_rep (l:list A) (p:val) : mpred :=
   end.
   \end{lstlisting}
   \vfill
-  \begin{center}
+  \onslide<2>{\begin{center}
     \color{mDarkRed}$q=q0?$
-  \end{center}
+  \end{center}}
   
 \end{frame}
 
@@ -309,18 +309,22 @@ Fixpoint list_rep (l:concrete_list A) (p:val) : mpred :=
     | [ ] => emp
     | (ai,pi)::l' => cell_rep ai pi p * list_rep l' pi
   end.
-\end{lstlisting}
+ \end{lstlisting}
+ \vfill
+ \begin{center}
+   \phantom{\color{mDarkRed}$q=q0?$}
+  \end{center}
 \end{frame}
 
 \begin{frame}[fragile]{Augmented \btrees\ types}
 
-  \begin{lstlisting}[language=Coq,basicstyle=\scriptsize]
+  \begin{lstlisting}[language=Coq,basicstyle=\scriptsize,escapeinside={<@}{@>}]
 (* Btree Types *)
 Inductive entry (X:Type): Type :=
      | keyval: key -> V -> X -> entry X
      | keychild: key -> node X -> entry X
 with node (X:Type): Type :=
-     | btnode: option(node X)-> listentry X-> bool-> bool-> bool-> X -> node X
+     | btnode: option(node X)-> listentry X-> bool-> bool-> bool-> <@\color{mDarkRed}\texttt{X}@> -> node X
 with listentry (X:Type): Type :=
      | nil: listentry X
      | cons: entry X -> listentry X -> listentry X.
@@ -527,7 +531,7 @@ if (node->entries[targetIdx].key == key)
   \begin{block}{Future Work}
     \begin{itemize}
     \item Prove the remaining Lemmas.
-    \item Prove correctness of the Trie of \btrees\ data-structure.
+    \item Prove correctness of the entire data-structure.
     \item Concurrent database.
     \end{itemize}
   \end{block}
