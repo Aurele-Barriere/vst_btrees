@@ -106,7 +106,7 @@
   \begin{exampleblock}{Outline}
     \begin{itemize}
     \item Fix the C library
-    \item Define a Coq formal model for \btrees\ with cursors
+    \item Define a Coq functional model for \btrees\ with cursors
     \item Prove the correctness of the C library using VST
     \end{itemize}
   \end{exampleblock}
@@ -123,7 +123,6 @@
       \begin{itemize}
       \item Ordered
       \item Balanced
-      \item Fanout
       \end{itemize}
     \end{exampleblock}
       \begin{block}{Operations}
@@ -139,14 +138,14 @@
   % operations
 \end{frame}
 
-\begin{frame}{B+Trees Insertion}
-  \beforeinsert
-  \vfill
-  \pause
-  \afterinsert
-\end{frame}
+%% \begin{frame}{B+Trees Insertion}
+%%   \beforeinsert
+%%   \vfill
+%%   \pause
+%%   \afterinsert
+%% \end{frame}
 
-\begin{frame}{Cursors}
+\begin{frame}{\btrees\ Cursors}
   % example.
   \cursor
   \vfill
@@ -227,7 +226,7 @@
   \begin{block}{Using VST}
     \begin{itemize}
     \item Generate an equivalent Clight program
-    \item Define a Coq formal model
+    \item Define a Coq functional model
     \item Write specifications for each functions ($\approx$ Hoare Triple)
     \item Prove each function correct
     \end{itemize}
@@ -235,7 +234,7 @@
   
 \end{frame}
 
-\begin{frame}[fragile]{A B+Tree with Cursors formal model}
+\begin{frame}[fragile]{A B+Tree with Cursors functional model}
 
   \begin{lstlisting}[language=Coq,basicstyle=\scriptsize,escapeinside={<@}{@>}]
 (* Btree Types *)
@@ -274,7 +273,7 @@ Definition relation (X:Type): Type := node X * X.  (* root and address *)
   \end{tikzpicture}
   \vfill
   \begin{lstlisting}[language=Coq]
-Fixpoint list_rep (l:list A) (p:val) : mpred :=
+Fixpoint list_rep {A} (l:list A) (p:val) : mpred :=
   match l with
     | [ ] => emp
     | ai::l' => EX pi:val, cell_rep ai pi p * list_rep l' pi
@@ -284,7 +283,6 @@ Fixpoint list_rep (l:list A) (p:val) : mpred :=
   \onslide<2>{\begin{center}
     \color{mDarkRed}$q=q0?$
   \end{center}}
-  
 \end{frame}
 
 \begin{frame}[fragile]{Augmented Type}
@@ -304,7 +302,7 @@ Fixpoint list_rep (l:list A) (p:val) : mpred :=
   \end{tikzpicture}
   \vfill
  \begin{lstlisting}[language=Coq]
-Fixpoint list_rep (l:concrete_list A) (p:val) : mpred :=
+Fixpoint list_rep {A} (l:concrete_list A) (p:val) : mpred :=
   match l with
     | [ ] => emp
     | (ai,pi)::l' => cell_rep ai pi p * list_rep l' pi
@@ -341,7 +339,7 @@ Definition abstract_tree : Type := node unit.
   
 \end{frame}
 
-\begin{frame}[fragile]{A B+Tree with Cursors formal model}
+\begin{frame}[fragile]{A B+Tree with Cursors functional model}
 
   \begin{lstlisting}[language=Coq,basicstyle=\scriptsize]
 (* takes a PARTIAL cursor, n next node (pointed to by the cursor)
@@ -383,9 +381,9 @@ Definition RL_MoveToNext_spec : ident * funspec :=
       ]
       \node[anchor=north west,
       xshift=0.5cm,
-      yshift=-1.9cm] 
+      yshift=-1.7cm] 
       at (current page.north west) (S) {\prog{$S$\phantom{$PQ$}}};
-      \draw[draw=prog,fill=prog] ([yshift=-0.4cm]S) rectangle ++(0.1cm,0.8cm);
+      \draw[draw=prog,fill=prog] ([yshift=-0.2cm]S) rectangle ++(0.1cm,0.4cm);
  \end{tikzpicture}
  \begin{tikzpicture}[remember picture, overlay,%
       ]
@@ -404,8 +402,6 @@ Definition RL_MoveToNext_spec : ident * funspec :=
       \draw[draw=spec,fill=spec] ([yshift=-0.9cm]Q) rectangle ++(0.1cm,1.8cm);
     \end{tikzpicture}
 \end{frame}
-
-
 
 
 \begin{frame}[fragile]{Proving a C program correct with VST}
@@ -507,11 +503,11 @@ if (node->entries[targetIdx].key == key)
   \end{exampleblock}
   \vfill
   \begin{alertblock}{Remaining Proofs}
-    Many theorems about the \textbf{formal} model.
+    Many theorems about the \textbf{functional} model.
   \end{alertblock}
   \vfill
   \begin{itemize}
-  \item 1 kloc formal model and related lemmas
+  \item 1 kloc functional model and related lemmas
   \item 1 kloc representation predicates and functions specifications
   \item 4 kloc VST proofs
   \end{itemize}
@@ -523,7 +519,7 @@ if (node->entries[targetIdx].key == key)
     We now have
     \begin{itemize}
     \item A modified C library for \btrees\ with Cursors.
-    \item A Coq formal model for \btrees\ with Cursors.
+    \item A Coq functional model for \btrees\ with Cursors.
     \item A VST correctness proof relating the two.
     \end{itemize}
   \end{block}
