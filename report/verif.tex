@@ -157,22 +157,24 @@ This is done by proving the following theorem, \textbf{subnode\_rep}:
   btnode_rep root = btnode_rep n * (btnode_rep n -* btnode_rep root)
 \end{lstlisting}
 
-\todo{explanation? explain wandframeelim? wouldn't it be too technical?}
-
+This seperating conjunction means that some part of the heap contains the subnode \texttt{n}, and a disjoint part contains the rest of the \btree.
+Here, instead of defining another formal structure for an incomplete \btree, we use the magic wand operator.
 % body proofs
 After proving many such theorems and writing every function specification (see \textbf{Fig.}~\ref{spec}), we need to prove the correctness of each function.
 These proofs consists in proving a Separation triple $\{P\}~c~\{Q\}$, where $P$ and $Q$ are the precondition and postcondition defined in the specification, and $c$ is the Clight function.
 Each triple is proved by moving forward through $c$.
 For instance, if the first instruction of $c$ is an assignment \texttt{a:=0}, using the \lstinline[language=Coq]{forward} tactic of VST will turn the proof goal $\{P\}~\texttt{a=0};~c'~\{Q\}$ into $\{P'\}~c'~\{Q\}$,
-where $P'$ is $P$ with the new \local\ binding: \texttt{temp \_a (Vint(Int.repr 0))}.
+where $P'$ is the strongest provable postcondition: $P$ with the new \local\ binding \texttt{temp \_a (Vint(Int.repr 0))}.
 Occasionally, other goals have to be proven.
 Every time an array is accessed, we must prove that the index is in the right range.
 Every time a pointer is dereferenced, we must prove that it is valid.
 Even if VST is able to infer the next precondition to use for sequences of instructions, we must still provide loop invariants when going through a loop or a branching statement.
 When calling another function of the \btrees\ library, we must prove that the precondition of this function holds.
 Finally, when we went through every statement of $c$, we are left with a goal $\{P\}~\texttt{skip}~\{Q\}$, where $Q$ is the function postcondition, and $P$ is the new precondition obtained after moving through the program.
-Such goals (called entailments) are proved using separation logic rules implemented in VST.
+Such goals amount to logical entailments ($P\vdash Q$) and are proved using separation logic rules implemented in VST.
 
 \subsection{Results}
-\todo{TODO: what has been proved? what's left?}
+Every C function has been proved correct using VST with regards to its specification.
+There are still some admitted theorems that are used in these proofs.
+However, these are results about the formal model, and could all be proved without knowledge of VST or C semantics. The library, formal model and correctness proofs can all be found in the DeepSpecDB repository~\cite{deepdb}.
 In the appendix, Section~\ref{subsec:proof} presents the VST proof of the function creating a new node.

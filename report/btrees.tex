@@ -5,7 +5,7 @@ The first part of our work consisted in modifying a \btrees\ with cursors librar
 %\btrees\ are high-performance in-memory data structures.
 \btrees\ are ordered and self-balanced.
 This allows for fast access to the data (located at the leaves), as it suffices to go down the tree using the keys in the nodes to find the next one.
-\btrees\ have been well studied~\cite{dbms} and implemented numerous times. % They are used in \todo{SQL,SQLite,...}.
+\btrees\ have been well studied~\cite{dbms} and implemented numerous times.
 A \btree\ example can be seen \textbf{Fig.}~\ref{bt}.
 The keys in the leaves point to a record (indicated in the figure by a * next to the key).
 The fanout value in this example is 4 (the maximum number of keys in each node).
@@ -90,7 +90,7 @@ Nodes also contain booleans that indicate if the node is the first or the last o
 This is used to speed up some functions.
 Finally, a cursor has an array of ancestors (the nodes, from the root to the leaf node pointed to) and an array of indexes locating the next child at each level.
 
-This library contains 37 functions, all of which are verified in VST (see Section~\ref{sec:verif}).\todo{all?}
+This library contains 37 functions, all of which are verified in VST (see Section~\ref{sec:verif}).
 Deletion hasn't been implemented yet.
 The list of all functions that can be used by a client of the library can be seen in the appendix, \textbf{Fig.}~\ref{header}.
 

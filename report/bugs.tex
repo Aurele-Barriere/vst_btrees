@@ -24,7 +24,7 @@ This means in particular that building such a cursor, then using the \lstinline{
 
 However, in the original implementation, this wasn't enforced.
 Indeed, if the built cursor was at the end of a leaf node, the \lstinline{GetRecord} function would access the last record of this node, instead of moving to the next leaf node.
-\todo{example}
+An example is given in the appendix, Section~\ref{subsec:bug}.
 
 This was fixed by introducing equivalent positions for the cursor in a \btree.
 Informally, a cursor pointing at the end of a leaf node is equivalent to the one pointing at the beginning of the next leaf node.
@@ -32,12 +32,10 @@ Previously, there was no difference between pointing at the last key of a node a
 This change requires the \lstinline{MoveToNext} function to move to the next position twice if the cursor is pointing at the end of a leaf node.
 This isn't an issue for the complexity, as one of these moves is guaranteed to be constant-time.
 
-\paragraph{Splitting Nodes in the Middle}
-The original implementation wasn't splitting internal nodes exactly in the middle if the fanout value was even.
-This does not affect the correctness of the \btree\ (which is still sorted and balanced) but can lead to a bigger depth on average, thus increasing the complexity of each functions.
-
 \paragraph{Reducing complexity}
 The original implementation of the \lstinline{MoveToKey} function used to start from the root of the \btree, thus not exploiting the current position of the cursor. This was modified.
+Similarly, the insertion function did not split the nodes exactly in the middle if the fanout value was even.
+This does not affect the correctness of the \btree\ (which is still sorted and balanced) but can lead to a bigger depth on average, thus increasing the complexity of each functions.
 
 \paragraph{Structure Changes}
 Working on the verification gave us the opportunity to clarify the entire structure of the implementation.
@@ -46,7 +44,7 @@ Overall, more than 70\% of the original library was rewritten.
 
 \paragraph{Other changes for the verification}
 Other changes were made to the original library to make verification possible.
-For instance, VST doesn't allow to verify an assignment where the type is a user-defined structure. \todo{why?}
+For instance, VST doesn't allow to verify an assignment where the type is a user-defined structure.
 We had to replace each entry copy (in the \lstinline{splitnode} function for instance) with copies of each fields, in order to prove the correctness.
 
 \paragraph{Wrong function call} The implementation of \lstinline{moveToPrevious} used to call \lstinline{moveToFirst} instead of \lstinline{movetToLast}, meaning that the cursor would be moved several positions backward.

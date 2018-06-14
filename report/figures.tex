@@ -103,3 +103,30 @@
   \caption{A \btree\ with a cursor pointing to key 6}
   \label{cursor}
   \end{figure}}
+
+
+\def\bugcursor{
+\begin{figure}
+\makebox[\textwidth][c]{
+  \scalebox{.7}{
+    \begin{tikzpicture}
+      % 
+      \btreeinodethree{root}{5}{9}{11};
+      \xyshift{-60mm}{-20mm}{\btreelnodethree{n1}{1}{2}{3}}
+      \xyshift{-30mm}{-20mm}{\btreelnodethree{n2}{5}{6}{7}}
+      \xyshift{0mm}{-20mm}{\btreelnodethree{n3}{9}{10}{}}
+      \xyshift{30mm}{-20mm}{\btreelnodethree{n4}{11}{15}{}}
+      % 
+      \foreach \x in {1,2,3,4} { \btreelink{root-\x}{n\x} }
+      %
+      \xyshift{-60mm}{0mm}{\cursornode{0}}
+      \xyshift{-60mm}{-6mm}{\cursornode{1}}
+      %
+      \cursorlink{c0}{root-1}
+      \cursorlink{c1}{[xshift=0.4cm]n1-c}
+    \end{tikzpicture}
+    
+  }}
+  \caption{Moving the cursor to key 4}
+  \label{bugcursor}
+  \end{figure}} 

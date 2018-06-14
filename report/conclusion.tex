@@ -4,11 +4,13 @@ The verification work has allowed us to find and fix several bugs.
 Some properties of the formal model have yet to be proved.
 An example of such properties is that any complete cursor's length is equal to the depth of its tree.
 We are confident that these admitted theorems should be provable.
-All of these proofs only deal with the formal model, and could be done without using VST.\todo{not true yet}
+All of these proofs only deal with the formal model, and could be done without using VST.
 
 % tries
 Like MassTree~\cite{masstree}, DeepSpecDB uses the \btrees\ library as a client to a Trie Library. A proof of this Trie library using VST is ongoing.
 The proof uses the abstract relation specification described in~\cite{brian}, and a proof that the formal model described in this work complies with it.
 
-\todo{should I talk about 64 bits support? concurrency? refs?}
-\todo{...}
+% concurrency
+A feasible next step would be to implement and verify a concurrent library.
+We believe that both the implementation and the verification proof could be based on the work that has been presented in this paper.
+

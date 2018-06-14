@@ -1,5 +1,13 @@
 \subsection{\btree\ insertion}
 \afterinsert
+
+\subsection{Moving a cursor to a new key}
+\label{subsec:bug}
+\bugcursor
+In the \btree\ \textbf{Fig.}~\ref{bugcursor}, moving the cursor to key 4 should make it point to the end of the first leaf node.
+Then, in the original implementation, accessing the record pointed to by the cursor would return the one associated with key 3.
+According to the abstract specification, the returned value should be the one associated with the next key (here, 5).
+
 \newpage
 \subsection{\btrees\ with cursors library}
 

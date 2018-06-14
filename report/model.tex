@@ -35,7 +35,7 @@ Definition relation (X:Type): Type := node X * X.  (* root and address *)
 \end{figure}
 
 % Types explanation
-\paragraph{Types}\textbf{Fig.}~\ref{coqtypes} presents the Coq Types for \btrees, cursors and relations. \todo{update for dependent relation type}
+\paragraph{Types}\textbf{Fig.}~\ref{coqtypes} presents the Coq Types for \btrees, cursors and relations.
 We can see that entries have a key, and either a record (of type \texttt{V}) or a child (of type \texttt{node X}).
 Nodes have three booleans, representing the \texttt{isLeaf}, \texttt{First} and \texttt{Last} of the C code.
 The $ptr_0$ of a node is represented with an option, as Leaf Nodes don't have any.
