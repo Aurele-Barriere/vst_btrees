@@ -88,7 +88,7 @@ Each element contains a pointer to the following one.
 The pointers $q_0, q_1$ should not appear in the formal model but are needed by the representation predicate.
 One should write \lstinline{listrep} such that this additional representation information is hidden from the user.
 
-The usual way to do that in VST (or in any sepration logic) consists in existentially quantifying over these values.
+The usual way to do that in VST (or in any separation logic) consists in existentially quantifying over these values.
 For instance, one could write:
 \begin{lstlisting}[language=Coq]
 Fixpoint list_rep (l:list A) (p:val) : mpred :=
@@ -120,7 +120,7 @@ Fixpoint list_rep (l:concrete_list A) (p:val) : mpred :=
 Finally, the formal structure of a pointer to a cell is an augmented cell (an element of the augmented list, of type \lstinline{A * val}) and its representation can use the \lstinline{val}, which is guaranteed to be the address of the cell in the memory.
 
 In our \btrees\ library, we have cursors containing pointers to subnodes of a \btree. We thus define a general \btree\ type, as seen on \textbf{Fig.}~\ref{coqtypes}, parametrized with a type \texttt{X}.
-Finally we define the following types:\\
+Finally, we define the following types:\\
 \lstinline[language=Coq]{Definition concrete_tree : Type := node val.}\\
 \lstinline[language=Coq]{Definition abstract_tree : Type := node unit.}
 
@@ -148,7 +148,7 @@ This is done by proving the following theorem:
 \end{lstlisting}
 
 We then need to prove that, if a node $root$ is represented in the heap, and some other node $n$ is a subnode of $root$, then $n$ is also represented in the heap.
-This is true because the function \btrep\ calls itself recursively on each children (see \textbf{Fig.}~\ref{btnoderep}).
+This is true because the function \btrep\ calls itself recursively on each child (see \textbf{Fig.}~\ref{btnoderep}).
 However, because \btrep\ is a separating clause, we can't simply use an implication. We need to rewrite it as a separation conjunction.
 This is done by proving the following theorem, \textbf{subnode\_rep}:
 
@@ -157,11 +157,11 @@ This is done by proving the following theorem, \textbf{subnode\_rep}:
   btnode_rep root = btnode_rep n * (btnode_rep n -* btnode_rep root)
 \end{lstlisting}
 
-This seperating conjunction means that some part of the heap contains the subnode \texttt{n}, and a disjoint part contains the rest of the \btree.
+This separating conjunction means that some part of the heap contains the subnode \texttt{n}, and a disjoint part contains the rest of the \btree.
 Here, instead of defining another formal structure for an incomplete \btree, we use the magic wand operator.
 % body proofs
 After proving many such theorems and writing every function specification (see \textbf{Fig.}~\ref{spec}), we need to prove the correctness of each function.
-These proofs consists in proving a Separation triple $\{P\}~c~\{Q\}$, where $P$ and $Q$ are the precondition and postcondition defined in the specification, and $c$ is the Clight function.
+These proofs consist in proving a Separation triple $\{P\}~c~\{Q\}$, where $P$ and $Q$ are the precondition and postcondition defined in the specification, and $c$ is the Clight function.
 Each triple is proved by moving forward through $c$.
 For instance, if the first instruction of $c$ is an assignment \texttt{a:=0}, using the \lstinline[language=Coq]{forward} tactic of VST will turn the proof goal $\{P\}~\texttt{a=0};~c'~\{Q\}$ into $\{P'\}~c'~\{Q\}$,
 where $P'$ is the strongest provable postcondition: $P$ with the new \local\ binding \texttt{temp \_a (Vint(Int.repr 0))}.
@@ -176,5 +176,5 @@ Such goals amount to logical entailments ($P\vdash Q$) and are proved using sepa
 \subsection{Results}
 Every C function has been proved correct using VST with regards to its specification.
 There are still some admitted theorems that are used in these proofs.
-However, these are results about the formal model, and could all be proved without knowledge of VST or C semantics. The library, formal model and correctness proofs can all be found in the DeepSpecDB repository~\cite{deepdb}.
+However, these are results about the formal model, and could all be proved without knowledge of VST or C semantics. The library, formal model and correctness proofs can all be found in the DeepSpecDB repository~\cite{deepdb}. Overall, this represents more than 7 kloc of Coq and 1 kloc of C.
 In the appendix, Section~\ref{subsec:proof} presents the VST proof of the function creating a new node.

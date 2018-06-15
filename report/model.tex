@@ -48,7 +48,7 @@ Its length indicates the cursor's depth.
 Finally, a relation is simply a root (node) and the address at which the representation is in the memory.% The depth and number of records can be easily computed.
 
 \paragraph{Functions} Then, each C function must have an equivalent in the formal Coq model.
-For instance, \textbf{Fig.}~\ref{movetofirst} presents the coq \texttt{moveToFirst} function.
+For instance, \textbf{Fig.}~\ref{movetofirst} presents the Coq \texttt{moveToFirst} function.
 It takes as input the next node to go down to. If this node is a Leaf Node, then it returns the cursor with the new node, and the index 0 (pointing to the first record).
 Otherwise, it goes down $ptr_0$, and adds to the cursor the next node and the index \texttt{im} (representing -1).
 

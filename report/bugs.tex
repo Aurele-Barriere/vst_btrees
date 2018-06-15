@@ -35,7 +35,7 @@ This isn't an issue for the complexity, as one of these moves is guaranteed to b
 \paragraph{Reducing complexity}
 The original implementation of the \lstinline{MoveToKey} function used to start from the root of the \btree, thus not exploiting the current position of the cursor. This was modified.
 Similarly, the insertion function did not split the nodes exactly in the middle if the fanout value was even.
-This does not affect the correctness of the \btree\ (which is still sorted and balanced) but can lead to a bigger depth on average, thus increasing the complexity of each functions.
+This does not affect the correctness of the \btree\ (which is still sorted and balanced) but can lead to a bigger depth on average, thus increasing the complexity of each function.
 
 \paragraph{Structure Changes}
 Working on the verification gave us the opportunity to clarify the entire structure of the implementation.
@@ -45,7 +45,7 @@ Overall, more than 70\% of the original library was rewritten.
 \paragraph{Other changes for the verification}
 Other changes were made to the original library to make verification possible.
 For instance, VST doesn't allow to verify an assignment where the type is a user-defined structure.
-We had to replace each entry copy (in the \lstinline{splitnode} function for instance) with copies of each fields, in order to prove the correctness.
+We had to replace each entry copy (in the \lstinline{splitnode} function for instance) with copies of each field, in order to prove the correctness.
 
 \paragraph{Wrong function call} The implementation of \lstinline{moveToPrevious} used to call \lstinline{moveToFirst} instead of \lstinline{movetToLast}, meaning that the cursor would be moved several positions backward.
 Because this function wasn't tested, this simple bug was only found when doing the verification.
