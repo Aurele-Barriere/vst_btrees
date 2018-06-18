@@ -4,9 +4,8 @@ This demonstrates the benefits of formal verification: even though the library o
 \paragraph{Wrong Array Access} Originally, the library included a function, \lstinline{findChildIndex}.
 Given a key and a sorted list of entries, this simple function would return the index at which the key should be inserted.
 It was used to go down the tree or insert a new key and record.
-Because that function could be called on internal nodes, it could return $-1$, if the key was strictly less than any key in the entry list.
-When going down the tree, it would mean that the next node to consider was the $ptr_0$ of the current node.
-
+Because that function could be called on internal nodes, it could return $-1$, if the key was strictly less than any key in the entry list and the next node to consider is $ptr_0$.
+%When going down the tree, it would mean that the next node to consider was the $ptr_0$ of the current node.
 However, that function was also called on leaf nodes, that do not have a $ptr_0$.
 Then, in the insertion function, to check if the key was already inside the relation, we could see the following line for leaf nodes:
 \begin{lstlisting}

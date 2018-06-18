@@ -174,7 +174,7 @@ Finally, when we went through every statement of $c$, we are left with a goal $\
 Such goals amount to logical entailments ($P\vdash Q$) and are proved using separation logic rules implemented in VST.
 
 \subsection{Results}
-Every C function has been proved correct using VST with regards to its specification.
+Every C function has been proved correct using VST with regards to its specification (with one exception that should be dealt with before the end of this internship).
 There are still some admitted theorems that are used in these proofs.
 However, these are results about the formal model, and could all be proved without knowledge of VST or C semantics. The library, formal model and correctness proofs can all be found in the DeepSpecDB repository~\cite{deepdb}. Overall, this represents more than 7 kloc of Coq and 1 kloc of C.
 In the appendix, Section~\ref{subsec:proof} presents the VST proof of the function creating a new node.
