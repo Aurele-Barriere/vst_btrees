@@ -124,7 +124,7 @@ Finally, we define the following types:\\
 \lstinline[language=Coq]{Definition concrete_tree : Type := node val.}\\
 \lstinline[language=Coq]{Definition abstract_tree : Type := node unit.}
 
-We then define a representation lemma on augmented trees and augmented cursors (in the appendix, \textbf{Fig.}~\ref{btnoderep}).
+We then define a representation predicate on augmented trees and augmented cursors (in the appendix, \textbf{Fig.}~\ref{btnoderep}).
 We also prove multiple lemmas about these representations. For instance, if a node is represented in the memory at some address $p$, then $p$ is a valid pointer.
 
 \subsection{\btrees\ Verification}

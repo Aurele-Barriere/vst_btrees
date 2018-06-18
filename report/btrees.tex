@@ -63,7 +63,7 @@ To the best of our knowledge, cursors of this kind have been used only in the \b
 % how are the functions changed
 With a cursor, basic functions (insertion, accessing a record) do not start at the root anymore, but from the leaf node that the cursor is pointing to.
 For instance, when accessing the record for a given key $k$, if $k$ is in the same leaf node as the cursor, then we can fetch the associated record in constant-time.
-Whenever $k$ is not in the same leaf node, we need to go up in the \btree\ using the previous levels of the cursors, until we reach a parent node of the desired key.
+Whenever $k$ is not in the same leaf node, we need to go up in the \btree\ using the previous levels of the cursor, until we reach a parent node of the desired key.
 We can then go down the \btree\ until $k$ is found.
 For instance, if we search for key 14 in \textbf{Fig.}~\ref{cursor}, we can first see that 14 is not in the leaf node pointed to by the cursor (containing only keys from 5 to 8).
 We then go up in the \btree, using the cursor, to the internal node containing 5, 9, 12 and 15.
