@@ -1,116 +1,312 @@
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% a0poster Landscape Poster
-% LaTeX Template
-% Version 1.0 (22/06/13)
-%
-% The a0poster class was created by:
-% Gerlinde Kettl and Matthias Weiser (tex@kettl.de)
-% 
-% This template has been downloaded from:
-% http://www.LaTeXTemplates.com
-%
-% License:
-% CC BY-NC-SA 3.0 (http://creativecommons.org/licenses/by-nc-sa/3.0/)
-%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\documentclass[usenames,dvipsnames]{beamer}
+%% Possible paper sizes: a0, a0b, a1, a2, a3, a4.
+%% Possible orientations: portrait, landscape
+%% Font sizes can be changed using the scale option.
+\usepackage[size=a0,orientation=landscape,scale=1.8]{beamerposter}
+\usetheme{LLT-poster}
+\usecolortheme{Btrees}
 
-%----------------------------------------------------------------------------------------
-%	PACKAGES AND OTHER DOCUMENT CONFIGURATIONS
-%----------------------------------------------------------------------------------------
 
-\documentclass[a0,landscape]{a0poster}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{libertine}
+\usepackage[scaled=0.92]{inconsolata}
+\usepackage[libertine]{newtxmath}
 
-\usepackage{multicol} % This is so we can have multiple columns of text side-by-side
-\columnsep=100pt % This is the amount of white space between the columns in the poster
-\columnseprule=3pt % This is the thickness of the black line between the columns in the poster
+\usepackage{mwe}
 
-\usepackage[svgnames]{xcolor} % Specify colors by their 'svgnames', for a full list of all colors available see here: http://www.latextemplates.com/svgnames-colors
+\usepackage{xcolor}
+\usepackage{btreecursor}
+\usepackage{listings}
+\usepackage{multicol}
+\usepackage{lstcoq}
 
-\usepackage{times} % Use the times font
-%\usepackage{palatino} % Uncomment to use the Palatino font
+\definecolor{spec}{HTML}{6F1616}
+\definecolor{prog}{HTML}{106235}
+\def\spec#1{{\color{spec}\textbf{#1}}}
+\def\prog#1{{\color{prog}\textbf{#1}}}
+\newcommand{\wand}{\mathrel{-\hspace{-.7ex}*}}
 
-\usepackage{graphicx} % Required for including images
-\graphicspath{{figures/}} % Location of the graphics files
-\usepackage{booktabs} % Top and bottom rules for table
-\usepackage[font=small,labelfont=bf]{caption} % Required for specifying captions to tables and figures
-\usepackage{amsfonts, amsmath, amsthm, amssymb} % For math fonts, symbols and environments
-\usepackage{wrapfig} % Allows wrapping text around tables and figures
+
+\lstset{language=C,
+                basicstyle=\ttfamily\footnotesize,
+                keywordstyle=\color{RedViolet}\ttfamily,
+                stringstyle=\color{Violet}\ttfamily,
+                commentstyle=\color{MidnightBlue}\ttfamily,
+                morecomment=[l][\color{magenta}]{\#},
+                morekeywords={Bool, Key, size_t},
+                emph={%  
+                  Relation_T, Cursor_T, BtNode_T, Relation, Cursor, BtNode, Entry, Child_or_Record%
+                },emphstyle={\color{Maroon}}
+}
+
+% colors
+\definecolor{mDarkRed}{HTML}{6F1616}
+\definecolor{mDarkGreen}{HTML}{106235}
+\definecolor{mTeal}{HTML}{112233}
+\definecolor{mBlack}{HTML}{000000}
+\setbeamercolor{normal text}{fg=mTeal}
+\setbeamercolor{alerted text}{fg=mDarkRed}
+\setbeamercolor{example text}{fg=mDarkGreen}
+\setbeamercolor{title separator}{fg=purple,bg=mBlack}
+
+\tikzstyle{btreeptr} = [draw, semithick, fill=headline, minimum height=2em]
+\tikzstyle{btreeval} = [draw, semithick, fill=secondary, minimum size=2em]
+\tikzstyle{btreevale} = [draw,semithick, fill=headline, minimum size=2em]
+\tikzstyle{btlink} = [draw, semithick, ->, >=triangle 45]
+
+\author[aurele.barriere@ens-rennes.fr]{Aur\`ele Barri\`ere}
+\title{Verification of B+Trees with Cursors using the Verified Software Toolchain}
+\institute{ENS Rennes - Princeton University}
+% Optional foot image
+%\footimage{\includegraphics[width=4cm]{IMG_1934.jpg}}
+\def\sublock#1{\textbf{#1:}\\\vspace{0.5cm}}
+\def\subsep{\vspace{1cm}}
 
 \begin{document}
+\begin{frame}[fragile]
+\begin{columns}[T]
 
-%----------------------------------------------------------------------------------------
-%	POSTER HEADER 
-%----------------------------------------------------------------------------------------
+%%%% First Column
+\begin{column}{.23\textwidth}
 
-% The header is divided into three boxes:
-% The first is 55% wide and houses the title, subtitle, names and university/organization
-% The second is 25% wide and houses contact information
-% The third is 19% wide and houses a logo for your university/organization or a photo of you
-% The widths of these boxes can be easily edited to accommodate your content as you see fit
+  \textbf{Aurèle Barrière}, ENS Rennes\\
+  %\texttt{aurele.barriere@ens-rennes.fr}\\
+  \textit{Supervisor:}\\ \textbf{Andrew W. Appel}, Princeton University
+\begin{block}{DeepSpecDB}
+\begin{tikzpicture}[remember picture,overlay]
+    \node[xshift=190mm,yshift=-160mm,anchor=north west] at (current page.north west){%
+    \includegraphics[width=8cm]{deepspec_logo}};
+\end{tikzpicture}
+\sublock{Goal}
+\begin{itemize}
+\item Implement (\textbf{C})
+\item Specify (\textbf{Coq \& VST})
+\item Verify (\textbf{Coq \& VST})
+\end{itemize}
+a high-performance {\color{title}concurrent} in-memory database system.
+\subsep
 
-\begin{minipage}[b]{0.55\linewidth}
-\veryHuge \color{NavyBlue} \textbf{VST Verification of B+Trees with Cursors} \color{Black}\\ % Title
-%\Huge\textit{An Exploration of Complexity}\\[1cm] % Subtitle
-\huge \textbf{Aur\`ele Barri\`ere}\\ % Author(s)
-\huge ENS Rennes\\ % University/organization
-\end{minipage}
-%
-%% \begin{minipage}[b]{0.25\linewidth}
-%% \color{DarkSlateGray}\Large \textbf{Contact Information:}\\
-%% Department Name\\ % Address
-%% University Name\\
-%% 123 Broadway, State, Country\\\\
-%% Phone: +1 (000) 111 1111\\ % Phone number
-%% Email: \texttt{john@LaTeXTemplates.com}\\ % Email address
-%% \end{minipage}
-%
-%% \begin{minipage}[b]{0.19\linewidth}
-%% \includegraphics[width=20cm]{logo.png} % Logo or a photo of you, adjust its dimensions here
-%% \end{minipage}
+\sublock{Previous Work}
+\begin{itemize}
+\item C sequential implementation, including a library for B+Trees with cursors
+\item Coq specification for abstract relation with cursor
+\end{itemize}
+\subsep
 
-\vspace{1cm} % A bit of extra whitespace between the header and poster content
+\sublock{First Verification step}
+Specify and prove correctness of the B+Trees with cursors library.
 
-%----------------------------------------------------------------------------------------
+\end{block}
 
-\begin{multicols}{4} % This is how many columns your poster will be broken into, a poster with many figures may benefit from less columns whereas a text-heavy poster benefits from more
+\begin{block}{Verified Software Toolchain}
+  \begin{tikzpicture}[remember picture,overlay]
+    \node[xshift=190mm,yshift=-520mm,anchor=north west] at (current page.north west){%
+    \includegraphics[width=6cm]{vst}};
+\end{tikzpicture}%
+\sublock{Program Language}
+  Verifiable C, subset\\
+  of CompCert's Clight.
+  \subsep
+  
+  \sublock{Program Logic}
+  Higher-Order Separation Logic, an extension of Hoare Logic.
+  \subsep
+  
+  \sublock{Using VST}
+  \begin{itemize}
+  \item Generate Clight program (automatic)
+  \item Define Coq Functional Model
+  \item Specify each function in Separation Logic
+  \item Prove each function correct
+  \end{itemize}
+  \subsep
+  
+  VST includes many Coq tactics to write a forward separation logic proof.
+\end{block}
 
-%----------------------------------------------------------------------------------------
-%	ABSTRACT
-%----------------------------------------------------------------------------------------
+\end{column}
 
-\color{Navy} % Navy color for the abstract
+%%%% Second Column
+\begin{column}{.5\textwidth}
+\begin{center}
+  \begin{tikzpicture}
+    % 
+    \btreeinodethree{root}{12}{}{};
+    \xyshift{-100mm}{-50mm}{\btreeinodethree{n1}{5}{9}{}}
+    \xyshift{100mm}{-50mm}{\btreeinodethree{n2}{14}{}{}}
+    % 
+    \xyshift{-220mm}{-100mm}{\btreelnodethree{n11}{1}{2}{3}}
+    \xyshift{-110mm}{-100mm}{\btreelnodethree{n12}{5}{6}{7}}
+    \xyshift{-00mm}{-100mm}{\btreelnodethree{n13}{9}{10}{}}
+    \xyshift{110mm}{-100mm}{\btreelnodethree{n21}{12}{13}{}}
+    \xyshift{220mm}{-100mm}{\btreelnodethree{n22}{14}{18}{28}}
+    % 
+    \foreach \x in {1,2} { \btreelink{root-\x}{n\x} }
+    \foreach \x in {1,2,3} { \btreelink{n1-\x}{n1\x} }
+    \foreach \x in {1,2} { \btreelink{n2-\x}{n2\x} }
+    %
+    \xyshift{-220mm}{0mm}{\cursornode{0}}
+    \xyshift{-220mm}{-30mm}{\cursornode{1}}
+    \xyshift{-220mm}{-60mm}{\cursornode{2}}
+    %
+    \cursorlink{c0}{root-1}
+    \cursorlink{c1}{n1-2}
+    \cursorlink{c2}{n12-a}
+  \end{tikzpicture}\\
+  B+Tree with a cursor pointing to the record of key 5.
+\end{center}
 
-\begin{abstract}
+\begin{block}{B+Trees with Cursors}
+  \vspace{-1cm}
+  \setlength{\columnsep}{10cm}
+  \begin{multicols}{2}
+  \sublock{B+Trees}
+  \begin{itemize}
+  \item Storing key-record pairs
+  \item Ordered
+  \item Balanced
+  \end{itemize}
+  \subsep
+  
+  \sublock{Cursors}
+  \begin{itemize}
+  \item Arrays of pointers from root to record
+  \item Enable range queries
+  \item Exploit operation locality
+  \end{itemize}
+  \vfill\null
+  \columnbreak
+  
+  \sublock{Operations}
+  \begin{itemize}
+  \item Insert key-record pair
+  \item {\color{title}Delete key-record pair}
+  \item Move cursor to some key
+  \item Move cursor to the first key
+  \item Move cursor to the next key
+  \end{itemize}
+  \end{multicols}
+\end{block}
 
-todo
+\begin{block}{Functional Model and Specifications}
+  \vspace{-2cm}
+    \setlength{\columnsep}{5cm}
+  \begin{multicols}{2}
+    \begin{lstlisting}[language=Coq,basicstyle=\scriptsize]
+(* moves the cursor to the next position
+   takes a COMPLETE cursor as input *)
+Definition moveToNext {X:Type} (c:cursor X) (r:relation X) : cursor X :=
+  match isValid c r with
+  | false => c                (* invalid cursor *)
+  | _ =>
+    let cincr := next_cursor (up_at_last c) in
+    match cincr with
+    | [] => moveToFirst (get_root r) [] O 
+    | (n,i)::c' =>
+      match isnodeleaf n with
+      | true => cincr         (* if we did not go up *)
+      | false =>
+        match (nth_node i n) with
+        | None => cincr       (* impossible with a correct btree *)
+        | Some n' =>
+          moveToFirst n' cincr (length cincr)
+        end
+      end
+    end
+  end.
+    \end{lstlisting}
+    \vfill\null
+    \columnbreak
 
-\end{abstract}
+    \begin{lstlisting}[language=Coq,basicstyle=\scriptsize]
+Definition moveToNext_spec : ident * funspec :=
+  DECLARE _moveToNext
+  WITH c:cursor val, pc:val, r:relation val, numrec:nat
+  PRE[ _cursor OF tptr tcursor ]
+    PROP(complete_cursor c r; correct_depth r)
+    LOCAL(temp _cursor pc)
+    SEP(relation_rep r numrec; cursor_rep c r pc)
+  POST[ tvoid ]
+    PROP()
+    LOCAL()
+    SEP(relation_rep r numrec; cursor_rep (moveToNext c r) r pc).
+    \end{lstlisting}
+    \subsep
+    
+    \sublock{Specifications}
+    \begin{itemize}
+    \item Precondition and Postcondition
+    \item Precise description of the memory's contents
+    \item One for each of the 27 library functions
+    \end{itemize}
+  \end{multicols}
+\end{block}
+\end{column}
 
-%----------------------------------------------------------------------------------------
-%	INTRODUCTION
-%----------------------------------------------------------------------------------------
+%%%% This is the THIRD column
+\begin{column}{.23\textwidth}
+  \begin{block}{VST Correctness Proofs}
+    \begin{lstlisting}[language=Coq,basicstyle=\scriptsize]
+Lemma body_createNewNode:
+  semax_body Vprog Gprog f_createNewNode createNewNode_spec.
+Proof.
+  start_function.
+  forward_call (tbtnode).       (* t'1=malloc(sizeof tbtnode) *)
+  - split. simpl. rep_omega.
+    split; auto.
+  - Intros vret.
+    forward_if (PROP (vret<>nullval)
+  LOCAL (temp _newNode vret; temp _isLeaf (Val.of_bool isLeaf);
+  temp _First (Val.of_bool First); temp _Last (Val.of_bool Last))
+  SEP (malloc_token Tsh tbtnode vret * data_at_ Tsh tbtnode vret)).
+    + forward.                  (* return null *)
+    + forward. entailer!.
+    + Intros. 
+      forward.                  (* newNode->numKeys = 0 *)
+      unfold default_val. simpl.
+      forward.                  (* newnode->isLeaf=isLeaf *)
+      forward.                  (* newnode->First=First *)
+      forward.                  (* newnode->Last=Last *)
+      forward.                  (* newnode->ptr0=null *)
+      forward.                  (* return newnode *)
+      Exists vret. entailer!.
+      Exists (list_repeat 15 (Vundef, (inl Vundef):(val+val))).
+      simpl. cancel.
+      apply derives_refl.
+      Qed.
+    \end{lstlisting}
+    \subsep
+    
+    \begin{itemize}
+    \item Using VST's tactics (\textbf{forward})
+    \item Using Clight's semantics
+    \item Separation logic entailments
+    \item One proof for each C function
+    \end{itemize}
+\end{block}
 
-%\color{SaddleBrown} % SaddleBrown color for the introduction
+\begin{block}{Contribution}
+  \begin{itemize}
+  \item Fixed bugs of the C implementation
+  \item Defined an equivalent functional model
+  \item Proved the equivalence using VST
+  \end{itemize}
+  \subsep
+  
+  Over 7 kloc of Coq
+\end{block}
 
-\section*{Introduction}
+\begin{block}{Future Work}
+  \begin{itemize}
+  \item Finish correctness proof of the functional model
+  \item Prove correctness of the entire database system (on-going)
+  \item Add concurrency
+  \end{itemize}
+\end{block}
 
-...
+\end{column}
+\end{columns}
 
-
-\section*{Conclusions}
-
-...
-
-\color{DarkSlateGray} % Set the color back to DarkSlateGray for the rest of the content
-
-
-%%  %----------------------------------------------------------------------------------------
-%% %	REFERENCES
-%% %----------------------------------------------------------------------------------------
-
-%% \nocite{*} % Print all references regardless of whether they were cited in the poster or not
-%% \bibliographystyle{plain} % Plain referencing style
-%% \bibliography{btrees} % Use the example bibliography file sample.bib
-
-\end{multicols}
+\end{frame}
 \end{document}
