@@ -314,6 +314,19 @@ Fixpoint list_rep {A} (l:concrete_list A) (p:val) : mpred :=
   \end{center}
 \end{frame}
 
+
+\begin{frame}{Augmented \btrees\ types}
+  \cursorsep
+  \begin{tikzpicture}[remember picture, overlay,%
+      ]
+      \node[anchor=north west,
+      xshift=1.8cm,
+      yshift=-5cm] 
+      at (current page.north west) (S) {};
+      \draw[draw=black,fill=black] ([yshift=-0.2cm]S) rectangle ++(0.05cm,3cm);
+ \end{tikzpicture}
+\end{frame}
+
 \begin{frame}[fragile]{Augmented \btrees\ types}
 
   \begin{lstlisting}[language=Coq,basicstyle=\scriptsize,escapeinside={<@}{@>}]
@@ -525,7 +538,7 @@ if (node->entries[targetIdx].key == key)
   \begin{itemize}
   \item 1 kloc functional model and related lemmas
   \item 1 kloc representation predicates and functions specifications
-  \item 4 kloc VST proofs
+  \item 5 kloc VST proofs
   \end{itemize}
   
 \end{frame}
