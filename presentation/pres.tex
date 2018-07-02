@@ -70,14 +70,11 @@
 
 \date{\textit{ENS Rennes}
   \vfill
-  \textbf{March 1st, 2018 - June 29th, 2018}}
-
-\def\outline{
-  \begin{frame}[plain,noframenumbering]
-    \frametitle{Outline}
-    \tableofcontents[currentsection]
-  \end{frame}
-}
+  \textbf{Supervisor:} Andrew W. Appel\\
+  \textit{Princeton University}
+  \vfill
+  \textbf{February 1st, 2018 - June 29th, 2018}
+  \vfill}
 
 \include{figures}
 
@@ -418,7 +415,7 @@ Definition RL_MoveToNext_spec : ident * funspec :=
 
 
 \begin{frame}[fragile]{Proving a C program correct with VST}
-  \begin{lstlisting}[language=C, basicstyle=\scriptsize]
+  \begin{lstlisting}[language=C, basicstyle=\scriptsize\ttfamily]
 static BtNode* createNewNode(Bool isLeaf, Bool First, Bool Last) {
     BtNode* newNode;
     newNode = (BtNode*) surely_malloc(sizeof (BtNode));
@@ -438,8 +435,8 @@ Definition createNewNode_spec : ident * funspec :=
   PRE [ _isLeaf OF tint, _First OF tint, _Last OF tint ]
     PROP ()
     LOCAL (temp _isLeaf (Val.of_bool isLeaf);
-         temp _First (Val.of_bool First);
-         temp _Last (Val.of_bool Last))
+           temp _First (Val.of_bool First);
+           temp _Last (Val.of_bool Last))
     SEP ()
   POST [ tptr tbtnode ]
     EX p:val, PROP ()
@@ -528,7 +525,7 @@ if (node->entries[targetIdx].key == key)
 \begin{frame}{Results}
 
   \begin{exampleblock}{Finished Proofs}
-    {\color{Gray}(almost)} All 27 C functions are specified and proved using VST.
+    All 27 C functions are specified and proved using VST.
   \end{exampleblock}
   \vfill
   \begin{alertblock}{Remaining Proofs}
@@ -551,6 +548,7 @@ if (node->entries[targetIdx].key == key)
     \item A Coq functional model for \btrees\ with Cursors.
     \item A VST correctness proof relating the two.
     \end{itemize}
+    {\scriptsize\texttt{https://github.com/PrincetonUniversity/DeepSpecDB}}
   \end{block}
   \vfill
   \begin{block}{Future Work}
